@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import { Source_Serif_4 } from 'next/font/google';
+import Link from 'next/link';
 
 const sourceSerif = Source_Serif_4({ subsets: ['latin'] });
 
@@ -53,12 +54,12 @@ export default function Home() {
           Write privately. Think clearly. Share when you're ready.
         </p>
         <div className="space-x-4">
-          <button
-            onClick={() => scrollToSection('demo')}
-            className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition"
+          <Link
+            href="/dashboard"
+            className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition inline-block"
           >
             Try the Demo
-          </button>
+          </Link>
           <button
             onClick={() => scrollToSection('waitlist')}
             className="px-8 py-3 border-2 border-[#1A2630] rounded-lg hover:bg-[#1A2630] hover:text-white transition"
