@@ -43,13 +43,22 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{
+        duration: 0.3,
+        ease: [0.4, 0.0, 0.2, 1],
+      }}
       className="fixed inset-0 bg-[#F5F3EE] z-50"
     >
       <div className="max-w-4xl mx-auto h-full flex flex-col p-8">
         {/* Header */}
         <motion.div
-          initial={{ y: -20 }}
-          animate={{ y: 0 }}
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{
+            duration: 0.5,
+            delay: 0.1,
+            ease: [0.4, 0.0, 0.2, 1],
+          }}
           className={`text-center mb-8 ${sourceSerif.className}`}
         >
           <h2 className="text-xl text-gray-600">
@@ -61,7 +70,11 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{
+            duration: 0.5,
+            delay: 0.2,
+            ease: [0.4, 0.0, 0.2, 1],
+          }}
           className="flex-1"
         >
           <textarea
@@ -75,19 +88,24 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
 
         {/* Bottom Toolbar */}
         <motion.div
-          initial={{ y: 20 }}
-          animate={{ y: 0 }}
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{
+            duration: 0.5,
+            delay: 0.3,
+            ease: [0.4, 0.0, 0.2, 1],
+          }}
           className="flex justify-between items-center pt-4 border-t"
         >
           <button
             onClick={onBack}
-            className="px-6 py-2 text-gray-600 hover:text-[#1A2630] transition"
+            className="px-6 py-2 text-gray-600 hover:text-[#1A2630] transition-colors duration-300"
           >
             Back to Dashboard
           </button>
           <button
             onClick={handleSave}
-            className="px-6 py-2 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition"
+            className="px-6 py-2 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors duration-300"
           >
             Save Entry
           </button>
