@@ -8,7 +8,7 @@ import DailyEntry from '../components/DailyEntry';
 const sourceSerif = Source_Serif_4({ subsets: ['latin'] });
 
 export default function DashboardPage() {
-  const [showEntry, setShowEntry] = useState(false);
+  const [showEntry, setShowEntry] = useState(true);
 
   return (
     <div className={`min-h-screen bg-[#F5F3EE] text-[#1A2630] ${sourceSerif.className}`}>
