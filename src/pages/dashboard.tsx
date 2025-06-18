@@ -9,7 +9,7 @@ import PageTransition from '@/components/PageTransition';
 const sourceSerif = Source_Serif_4({ subsets: ['latin'] });
 
 export default function DashboardPage() {
-  const [showEntry, setShowEntry] = useState(false);
+  const [showEntry, setShowEntry] = useState(true);
 
   return (
     <PageTransition>
