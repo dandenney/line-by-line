@@ -37,7 +37,7 @@ export default function MultiWeekStreakDisplay({
       if (streakDays.includes(dayOfWeek)) {
         stubEntries.push({
           id: Date.now() - (i * 86400000), // Use timestamp-based IDs like real entries
-          text: `Demo entry for ${date.toLocaleDateString()} - This is sample content to show how the linking works. In a real app, clicking this would take you to the full entry.`,
+          text: `Demo entry for ${date.toLocaleDateString()} - Sample content for demonstration purposes.`,
           date: date
         });
       }
@@ -139,7 +139,7 @@ export default function MultiWeekStreakDisplay({
                 onClick={onStartEntry}
                 className="w-full py-4 bg-[#1A2630] text-white rounded-lg mt-8 hover:bg-opacity-90 transition-colors duration-300"
               >
-                Start Today's Entry
+                Start Today&apos;s Entry
               </motion.button>
             )}
           </div>

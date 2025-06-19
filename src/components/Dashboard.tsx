@@ -23,7 +23,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     // Load entries from localStorage
     const savedEntries = localStorage.getItem('entries');
     if (savedEntries) {
-      const parsedEntries = JSON.parse(savedEntries).map((entry: any) => ({
+      const parsedEntries = JSON.parse(savedEntries).map((entry: { id: number; text: string; date: string }) => ({
         ...entry,
         date: new Date(entry.date)
       }));
@@ -37,17 +37,18 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     let currentStreak = 0;
-    let currentDate = today;
+    // eslint-disable-next-line prefer-const
+    let checkDate = new Date(today);
     const sortedEntries = [...entries].sort((a, b) => b.date.getTime() - a.date.getTime());
     for (const entry of sortedEntries) {
       const entryDate = new Date(entry.date);
       entryDate.setHours(0, 0, 0, 0);
-      if (entryDate.getTime() === currentDate.getTime()) {
+      if (entryDate.getTime() === checkDate.getTime()) {
         currentStreak++;
-        currentDate.setDate(currentDate.getDate() - 1);
-      } else if (entryDate.getTime() === currentDate.getTime() - 86400000) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else if (entryDate.getTime() === checkDate.getTime() - 86400000) {
         currentStreak++;
-        currentDate.setDate(currentDate.getDate() - 1);
+        checkDate.setDate(checkDate.getDate() - 1);
       } else {
         break;
       }
