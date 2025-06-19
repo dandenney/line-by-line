@@ -46,7 +46,7 @@ export default function Home() {
       <div className={`min-h-screen bg-[#F5F3EE] text-[#1A2630] ${sourceSerif.className}`}>
         <Head>
           <title>Line by Line</title>
-          <meta name="description" content="Write privately. Think clearly. Share when you're ready." />
+          <meta name="description" content="Write privately. Think clearly. Share when you&apos;re ready." />
         </Head>
 
       {/* Hero Section */}

@@ -23,7 +23,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     // Load entries from localStorage
     const savedEntries = localStorage.getItem('entries');
     if (savedEntries) {
-      const parsedEntries = JSON.parse(savedEntries).map((entry: { id: number; text: string; date: string }) => ({
+      const parsedEntries = JSON.parse(savedEntries).map((entry: Entry) => ({
         ...entry,
         date: new Date(entry.date)
       }));
