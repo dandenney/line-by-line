@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Source_Serif_4 } from 'next/font/google';
 
 const sourceSerif = Source_Serif_4({ subsets: ['latin'] });
@@ -37,7 +37,7 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
   }, []);
 
   // Auto-resize textarea function (fallback for browsers without field-sizing support)
-  const adjustTextareaHeight = (index: number) => {
+  const adjustTextareaHeight = useCallback((index: number) => {
     if (supportsFieldSizing) return; // Skip if CSS handles it
     
     const textarea = textareaRefs.current[index];
@@ -45,7 +45,7 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
       textarea.style.height = 'auto';
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
-  };
+  }, [supportsFieldSizing]);
 
   // Generate the combined text for LLM processing
   const generateCombinedText = () => {
@@ -73,7 +73,7 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
         adjustTextareaHeight(index);
       });
     }
-  }, [supportsFieldSizing]);
+  }, [supportsFieldSizing, answers, adjustTextareaHeight]);
 
   const handleSave = () => {
     const combinedText = generateCombinedText();

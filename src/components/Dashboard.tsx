@@ -23,7 +23,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     // Load entries from localStorage
     const savedEntries = localStorage.getItem('entries');
     if (savedEntries) {
-      const parsedEntries = JSON.parse(savedEntries).map((entry: any) => ({
+      const parsedEntries = JSON.parse(savedEntries).map((entry: Entry) => ({
         ...entry,
         date: new Date(entry.date)
       }));
@@ -37,7 +37,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     let currentStreak = 0;
-    let currentDate = today;
+    const currentDate = today;
     const sortedEntries = [...entries].sort((a, b) => b.date.getTime() - a.date.getTime());
     for (const entry of sortedEntries) {
       const entryDate = new Date(entry.date);
