@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { Source_Serif_4 } from 'next/font/google';
+import MultiWeekStreakDisplay from './MultiWeekStreakDisplay';
 
 const sourceSerif = Source_Serif_4({ subsets: ['latin'] });
 
@@ -33,20 +34,14 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
 
   const calculateStreak = (entries: Entry[]) => {
     if (entries.length === 0) return;
-    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     let currentStreak = 0;
     let currentDate = today;
-    
-    // Sort entries by date descending
     const sortedEntries = [...entries].sort((a, b) => b.date.getTime() - a.date.getTime());
-    
     for (const entry of sortedEntries) {
       const entryDate = new Date(entry.date);
       entryDate.setHours(0, 0, 0, 0);
-      
       if (entryDate.getTime() === currentDate.getTime()) {
         currentStreak++;
         currentDate.setDate(currentDate.getDate() - 1);
@@ -57,7 +52,6 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
         break;
       }
     }
-    
     setStreak(currentStreak);
   };
 
@@ -82,21 +76,18 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
             delay: 0.1,
             ease: [0.4, 0.0, 0.2, 1],
           }}
-          className="mb-12 text-center"
+          className="mb-8 text-center"
         >
-          <div className="flex items-center justify-center gap-2 mb-6">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <span className="text-2xl">🔥</span>
             <span className={`text-2xl font-semibold ${sourceSerif.className}`}>
               {streak} day streak
             </span>
           </div>
-          <h2 className={`text-xl text-gray-600 ${sourceSerif.className}`}>
-            What challenged you today?
-          </h2>
         </motion.div>
 
-        {/* Start Entry Button */}
-        <motion.button
+        {/* Multi-Week Streak Display */}
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{
@@ -104,39 +95,49 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
             delay: 0.2,
             ease: [0.4, 0.0, 0.2, 1],
           }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onStartEntry}
-          className="w-full py-4 bg-[#1A2630] text-white rounded-lg mb-12 hover:bg-opacity-90 transition-colors duration-300"
+          className="mb-8"
         >
-          Start Today's Entry
-        </motion.button>
+          <MultiWeekStreakDisplay 
+            entries={entries} 
+            streakDays={[1,2,3,4,5]} 
+            onStartEntry={onStartEntry}
+          />
+        </motion.div>
 
-        {/* Entries List */}
-        <div className="space-y-6">
-          {entries.map((entry, index) => (
-            <motion.div
-              key={entry.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.4,
-                delay: 0.3 + index * 0.05,
-                ease: [0.4, 0.0, 0.2, 1],
-              }}
-              className="bg-white p-6 rounded-lg shadow-sm"
-            >
-              <p className={`text-gray-600 mb-2 ${sourceSerif.className}`}>
-                {entry.date.toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </p>
-              <p className="line-clamp-2">{entry.text}</p>
-            </motion.div>
-          ))}
-        </div>
+        {/* Sticky Legend */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{
+            duration: 0.5,
+            delay: 0.4,
+            ease: [0.4, 0.0, 0.2, 1],
+          }}
+          className="sticky bottom-4 bg-white p-4 rounded-lg shadow-md border border-gray-100"
+        >
+          <div className="flex justify-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-[#1A2630] rounded"></div>
+              <span>Completed</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-[#1A2630] rounded border-2 border-[#2A3640]"></div>
+              <span>Today</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
+              <span>Missed</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-gray-50 border border-gray-200 rounded"></div>
+              <span>Future</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-[#F5F3EE] border border-gray-100 rounded"></div>
+              <span>Off Day</span>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </motion.div>
   );
