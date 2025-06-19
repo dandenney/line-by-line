@@ -113,7 +113,7 @@ export default function Home() {
         
         <h1 className="text-6xl font-bold mb-6">Line by Line</h1>
         <p className="text-xl mb-12 max-w-2xl">
-          Write privately. Think clearly. Share when you're ready.
+          Write privately. Think clearly. Share when you&apos;re ready.
         </p>
         <div className="space-x-4">
           <Link
@@ -188,7 +188,7 @@ export default function Home() {
               </div>
               <div className="text-center">
                 <div className="text-4xl mb-4">🤝</div>
-                <h3 className="text-xl font-semibold mb-4">Share when you're ready</h3>
+                <h3 className="text-xl font-semibold mb-4">Share when you&apos;re ready</h3>
                 <p className="text-gray-600">Choose what to share and with whom, on your own terms.</p>
               </div>
             </div>
