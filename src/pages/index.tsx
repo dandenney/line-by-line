@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import { Source_Serif_4 } from 'next/font/google';
 import Link from 'next/link';
 import PageTransition from '@/components/PageTransition';
-
-const sourceSerif = Source_Serif_4({ subsets: ['latin'] });
 
 interface Entry {
   id: number;
@@ -43,7 +40,7 @@ export default function Home() {
 
   return (
     <PageTransition>
-      <div className={`min-h-screen bg-[#F5F3EE] text-[#1A2630] ${sourceSerif.className}`}>
+      <div className="min-h-screen bg-[#F5F3EE] text-[#1A2630] font-serif">
         <Head>
           <title>Line by Line</title>
           <meta name="description" content="Write privately. Think clearly. Share when you&apos;re ready." />

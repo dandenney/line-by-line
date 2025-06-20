@@ -2,12 +2,13 @@ import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 import { motion, AnimatePresence } from "motion/react";
 import { useRouter } from "next/router";
+import { fontVariables } from "@/lib/fonts";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#F5F3EE]">
+    <div className={`min-h-screen bg-[#F5F3EE] ${fontVariables}`}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={router.pathname}

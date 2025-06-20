@@ -1,9 +1,6 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { Source_Serif_4 } from 'next/font/google';
 import MultiWeekStreakDisplay from './MultiWeekStreakDisplay';
-
-const sourceSerif = Source_Serif_4({ subsets: ['latin'] });
 
 interface Entry {
   id: number;
@@ -20,39 +17,64 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
-    // Load entries from localStorage
     const savedEntries = localStorage.getItem('entries');
     if (savedEntries) {
-      const parsedEntries = JSON.parse(savedEntries).map((entry: Entry) => ({
-        ...entry,
-        date: new Date(entry.date)
-      }));
+      const parsedEntries: Entry[] = JSON.parse(savedEntries);
       setEntries(parsedEntries);
-      calculateStreak(parsedEntries);
+      
+      // Calculate streak
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      let currentStreak = 0;
+      let checkDate = new Date(today);
+      
+      while (true) {
+        const hasEntry = parsedEntries.some(entry => {
+          const entryDate = new Date(entry.date);
+          entryDate.setHours(0, 0, 0, 0);
+          return entryDate.getTime() === checkDate.getTime();
+        });
+        
+        if (hasEntry) {
+          currentStreak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      
+      setStreak(currentStreak);
     }
   }, []);
 
-  const calculateStreak = (entries: Entry[]) => {
-    if (entries.length === 0) return;
+  const handleNewEntry = (newEntry: Entry) => {
+    setEntries(prev => [newEntry, ...prev]);
+    
+    // Recalculate streak
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
     let currentStreak = 0;
-    // eslint-disable-next-line prefer-const
     let checkDate = new Date(today);
-    const sortedEntries = [...entries].sort((a, b) => b.date.getTime() - a.date.getTime());
-    for (const entry of sortedEntries) {
-      const entryDate = new Date(entry.date);
-      entryDate.setHours(0, 0, 0, 0);
-      if (entryDate.getTime() === checkDate.getTime()) {
-        currentStreak++;
-        checkDate.setDate(checkDate.getDate() - 1);
-      } else if (entryDate.getTime() === checkDate.getTime() - 86400000) {
+    
+    const allEntries = [newEntry, ...entries];
+    
+    while (true) {
+      const hasEntry = allEntries.some(entry => {
+        const entryDate = new Date(entry.date);
+        entryDate.setHours(0, 0, 0, 0);
+        return entryDate.getTime() === checkDate.getTime();
+      });
+      
+      if (hasEntry) {
         currentStreak++;
         checkDate.setDate(checkDate.getDate() - 1);
       } else {
         break;
       }
     }
+    
     setStreak(currentStreak);
   };
 
@@ -81,7 +103,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
         >
           <div className="flex items-center justify-center gap-2 mb-4">
             <span className="text-2xl">🔥</span>
-            <span className={`text-2xl font-semibold ${sourceSerif.className}`}>
+            <span className="text-2xl font-semibold font-serif">
               {streak} day streak
             </span>
           </div>

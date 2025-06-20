@@ -1,19 +1,26 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import { Source_Serif_4 } from 'next/font/google';
 import { AnimatePresence } from 'motion/react';
 import Dashboard from '../components/Dashboard';
 import DailyEntry from '../components/DailyEntry';
 import PageTransition from '@/components/PageTransition';
 
-const sourceSerif = Source_Serif_4({ subsets: ['latin'] });
+interface Entry {
+  id: number;
+  text: string;
+  date: Date;
+}
 
 export default function DashboardPage() {
   const [showEntry, setShowEntry] = useState(false);
 
+  const handleSaveEntry = (entry: Entry) => {
+    setShowEntry(false);
+  };
+
   return (
     <PageTransition>
-      <div className={`min-h-screen bg-[#F5F3EE] text-[#1A2630] ${sourceSerif.className}`}>
+      <div className="min-h-screen bg-[#F5F3EE] text-[#1A2630] font-serif">
         <Head>
           <title>Dashboard - Line by Line</title>
           <meta name="description" content="Your daily writing journal" />
@@ -23,7 +30,7 @@ export default function DashboardPage() {
           {showEntry ? (
             <DailyEntry
               key="entry"
-              onSave={() => setShowEntry(false)}
+              onSave={handleSaveEntry}
               onBack={() => setShowEntry(false)}
             />
           ) : (

@@ -1,10 +1,7 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { Source_Serif_4 } from 'next/font/google';
 import Link from 'next/link';
 import PageTransition from '@/components/PageTransition';
-
-const sourceSerif = Source_Serif_4({ subsets: ['latin'] });
 
 interface Entry {
   id: number;
@@ -48,7 +45,7 @@ export default function EntryDetailPage() {
 
   return (
     <PageTransition>
-      <div className={`min-h-screen bg-[#F5F3EE] text-[#1A2630] ${sourceSerif.className} p-8`}>
+      <div className="min-h-screen bg-[#F5F3EE] text-[#1A2630] font-serif p-8">
         <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8 mt-12">
           <Link
             href="/dashboard"
