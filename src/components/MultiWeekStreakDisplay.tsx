@@ -14,13 +14,15 @@ interface MultiWeekStreakDisplayProps {
 }
 
 export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEntry }: MultiWeekStreakDisplayProps) {
-  // Generate 4 weeks of data
+  // Generate 4 weeks of data (current week + 3 past weeks)
   const weeks = [];
   const today = new Date();
   
-  for (let week = 0; week < 4; week++) {
+  for (let weekOffset = 0; weekOffset < 4; weekOffset++) {
+    // Calculate the start of each week (Sunday)
     const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - (today.getDay() + (3 - week) * 7));
+    const daysToSubtract = today.getDay() + (weekOffset * 7);
+    weekStart.setDate(today.getDate() - daysToSubtract);
     
     // Filter entries for this specific week
     const weekEntries = entries.filter(entry => {
@@ -30,10 +32,21 @@ export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEnt
       return entryDate >= weekStart && entryDate <= weekEnd;
     });
     
+    // Generate week label
+    let weekLabel: string;
+    if (weekOffset === 0) {
+      weekLabel = "This Week";
+    } else if (weekOffset === 1) {
+      weekLabel = "Last Week";
+    } else {
+      weekLabel = `${weekOffset} Weeks Ago`;
+    }
+    
     weeks.push({
       weekStart,
       weekEntries,
-      weekNumber: 4 - week
+      weekLabel,
+      isCurrentWeek: weekOffset === 0
     });
   }
 
@@ -50,8 +63,14 @@ export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEnt
             ease: [0.4, 0.0, 0.2, 1],
           }}
         >
-          <div className="flex items-center justify-between mb-4">
-            {weekIndex === 0 && (
+          <div className="flex gap-4 items-center mb-4">
+            {!week.isCurrentWeek && (
+              <h3 className="bg-[#F5F3EE] text-lg font-medium text-gray-700 font-serif pr-4">
+                {week.weekLabel}
+              </h3>
+            )}
+            <div className="bg-[#e4ddd5] h-0.5 grow"></div>
+            {week.isCurrentWeek && (
               <button
                 onClick={onStartEntry}
                 className="px-4 py-2 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm"
@@ -63,7 +82,7 @@ export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEnt
           <StreakDisplay 
             entries={week.weekEntries} 
             streakDays={streakDays}
-            showLegend={false}
+            weekStart={week.weekStart}
           />
         </motion.div>
       ))}

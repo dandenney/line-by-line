@@ -18,35 +18,70 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
 
   useEffect(() => {
     const savedEntries = localStorage.getItem('entries');
+    let parsedEntries: Entry[] = [];
+    
     if (savedEntries) {
-      const parsedEntries: Entry[] = JSON.parse(savedEntries);
-      setEntries(parsedEntries);
+      parsedEntries = JSON.parse(savedEntries);
+    } else {
+      // Generate demo data if no entries exist
+      parsedEntries = generateDemoEntries();
+      localStorage.setItem('entries', JSON.stringify(parsedEntries));
+    }
+    
+    setEntries(parsedEntries);
+    
+    // Calculate streak
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let currentStreak = 0;
+    let checkDate = new Date(today);
+    
+    while (true) {
+      const hasEntry = parsedEntries.some(entry => {
+        const entryDate = new Date(entry.date);
+        entryDate.setHours(0, 0, 0, 0);
+        return entryDate.getTime() === checkDate.getTime();
+      });
       
-      // Calculate streak
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      if (hasEntry) {
+        currentStreak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    
+    setStreak(currentStreak);
+  }, []);
+
+  const generateDemoEntries = (): Entry[] => {
+    const demoEntries: Entry[] = [];
+    const today = new Date();
+    const streakDays = [1, 2, 3, 4, 5]; // Monday to Friday
+    
+    // Generate entries for the past 3 weeks
+    for (let dayOffset = 0; dayOffset < 21; dayOffset++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - dayOffset);
       
-      let currentStreak = 0;
-      let checkDate = new Date(today);
-      
-      while (true) {
-        const hasEntry = parsedEntries.some(entry => {
-          const entryDate = new Date(entry.date);
-          entryDate.setHours(0, 0, 0, 0);
-          return entryDate.getTime() === checkDate.getTime();
-        });
-        
-        if (hasEntry) {
-          currentStreak++;
-          checkDate.setDate(checkDate.getDate() - 1);
-        } else {
-          break;
+      // Only create entries for streak days (Mon-Fri)
+      const dayOfWeek = date.getDay();
+      if (streakDays.includes(dayOfWeek)) {
+        // Skip some days to make it more realistic (not every day)
+        if (Math.random() > 0.3) { // 70% chance of having an entry
+          const entry: Entry = {
+            id: date.getTime(),
+            text: `Demo entry for ${date.toLocaleDateString()} - This is sample content to show how the streak tracking works. In a real app, this would be your actual daily reflection.`,
+            date: date
+          };
+          demoEntries.push(entry);
         }
       }
-      
-      setStreak(currentStreak);
     }
-  }, []);
+    
+    return demoEntries;
+  };
 
   const handleNewEntry = (newEntry: Entry) => {
     setEntries(prev => [newEntry, ...prev]);
@@ -126,41 +161,6 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
               streakDays={[1,2,3,4,5]} 
               onStartEntry={onStartEntry}
             />
-          </motion.div>
-
-          {/* Sticky Legend */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{
-              duration: 0.5,
-              delay: 0.4,
-              ease: [0.4, 0.0, 0.2, 1],
-            }}
-            className="sticky bottom-4 bg-white p-4 rounded-lg shadow-md border border-gray-100"
-          >
-            <div className="flex justify-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-[#1A2630] rounded"></div>
-                <span>Completed</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-[#1A2630] rounded border-2 border-[#2A3640]"></div>
-                <span>Today</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
-                <span>Missed</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-gray-50 border border-gray-200 rounded"></div>
-                <span>Future</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-[#F5F3EE] border border-gray-100 rounded"></div>
-                <span>Off Day</span>
-              </div>
-            </div>
           </motion.div>
         </div>
       </section>

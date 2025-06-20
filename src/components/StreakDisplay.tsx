@@ -10,7 +10,7 @@ interface Entry {
 interface StreakDisplayProps {
   entries: Entry[];
   streakDays?: number[]; // 0 = Sunday, 1 = Monday, etc.
-  showLegend?: boolean;
+  weekStart?: Date; // Optional: if not provided, uses current week
 }
 
 interface DaySlot {
@@ -20,16 +20,23 @@ interface DaySlot {
   isStreakDay: boolean;
 }
 
-export default function StreakDisplay({ entries, streakDays = [1, 2, 3, 4, 5], showLegend = true }: StreakDisplayProps) {
+export default function StreakDisplay({ 
+  entries, 
+  streakDays = [1, 2, 3, 4, 5], 
+  weekStart
+}: StreakDisplayProps) {
   const generateWeekSlots = (): DaySlot[] => {
     const slots: DaySlot[] = [];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Get the start of the current week (Sunday)
-    const startOfWeek = new Date(today);
-    const dayOfWeek = today.getDay();
-    startOfWeek.setDate(today.getDate() - dayOfWeek);
+    // Use provided weekStart or calculate current week start
+    const startOfWeek = weekStart ? new Date(weekStart) : new Date(today);
+    if (!weekStart) {
+      const dayOfWeek = today.getDay();
+      startOfWeek.setDate(today.getDate() - dayOfWeek);
+    }
+    startOfWeek.setHours(0, 0, 0, 0);
     
     // Create entries map for quick lookup
     const entriesMap = new Map();
@@ -52,8 +59,6 @@ export default function StreakDisplay({ entries, streakDays = [1, 2, 3, 4, 5], s
       
       if (entry) {
         status = 'completed';
-      } else if (slotDate.getTime() === today.getTime()) {
-        status = 'today';
       } else if (slotDate < today) {
         status = isStreakDay ? 'missed' : 'opted-out';
       } else {
@@ -74,18 +79,18 @@ export default function StreakDisplay({ entries, streakDays = [1, 2, 3, 4, 5], s
   const getStatusStyles = (status: DaySlot['status']) => {
     switch (status) {
       case 'completed':
-        return 'bg-[#1A2630] text-white shadow-md';
+        return 'bg-[#fcf8f7] border-[#cfc3b7]';
       case 'missed':
-        return 'bg-red-100 text-red-700 border border-red-200';
+        return 'border-[#dfd6cd]';
       case 'future':
-        return 'border-2 border-[#cfc3b7]';
+        return 'border-dotted border-[#cfc3b7]';
       case 'opted-out':
-        return 'bg-[#F5F3EE] text-gray-400 border border-gray-100';
+        return 'border-[#f0eee8] diagonal-stripes-light';
     }
   };
 
   const getDayName = (date: Date) => {
-    return date.toLocaleDateString('en-US', { weekday: 'short' });
+    return date.toLocaleDateString('en-US', { month: 'short' });
   };
 
   const getDateNumber = (date: Date) => {
@@ -95,20 +100,30 @@ export default function StreakDisplay({ entries, streakDays = [1, 2, 3, 4, 5], s
   const weekSlots = generateWeekSlots();
 
   return (
-    <div className="mb-8">
-      <div className="grid grid-cols-7 gap-2">
+    <div className="py-8">
+      <div className="grid gap-6 auto-rows-auto" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))' }}>
         {weekSlots.map((slot, index) => {
           const content = (
             <>
-              <div className="text-xs font-medium mb-1">
+              <div className="text-[#cfc3b7] text-xs font-bold font-sans mb-1 uppercase">
                 {getDayName(slot.date)}
               </div>
-              <div className="text-lg font-bold">
+              <div className="text-[#372d2e] text-lg font-bold font-sans xl:text-6xl">
                 {getDateNumber(slot.date)}
               </div>
               {slot.entry && (
                 <div className="text-xs mt-1 opacity-80">
                   ✓
+                </div>
+              )}
+              {slot.status === 'missed' && (
+                <div className="text-xs mt-1 opacity-80">
+                  X
+                </div>
+              )}
+              {slot.status === 'future' && (
+                <div className="text-xs mt-1 opacity-80">
+                  ?
                 </div>
               )}
               {!slot.isStreakDay && (
@@ -135,7 +150,7 @@ export default function StreakDisplay({ entries, streakDays = [1, 2, 3, 4, 5], s
                   ease: [0.4, 0.0, 0.2, 1],
                 }}
                 className={`
-                  aspect-square rounded-lg flex flex-col items-center justify-center p-2
+                  aspect-square border-2 rounded-full flex flex-col items-center justify-center p-2
                   ${getStatusStyles(slot.status)}
                   transition-all duration-200 hover:scale-105 hover:ring-2 hover:ring-[#1A2630] cursor-pointer
                   ${!slot.isStreakDay ? 'opacity-60' : ''}
@@ -157,7 +172,7 @@ export default function StreakDisplay({ entries, streakDays = [1, 2, 3, 4, 5], s
                 ease: [0.4, 0.0, 0.2, 1],
               }}
               className={`
-                aspect-square rounded-lg flex flex-col items-center justify-center p-2
+                aspect-square border-2 rounded-full flex flex-col items-center justify-center p-2
                 ${getStatusStyles(slot.status)}
                 transition-all duration-200 hover:scale-105
                 ${!slot.isStreakDay ? 'opacity-60' : ''}
@@ -168,28 +183,6 @@ export default function StreakDisplay({ entries, streakDays = [1, 2, 3, 4, 5], s
           );
         })}
       </div>
-      
-      {/* Legend */}
-      {showLegend && (
-        <div className="flex justify-center gap-4 mt-4 text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-[#1A2630] rounded"></div>
-            <span>Completed</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
-            <span>Missed</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-gray-50 border border-gray-200 rounded"></div>
-            <span>Future</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-[#F5F3EE] border border-gray-100 rounded"></div>
-            <span>Off Day</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 } 
