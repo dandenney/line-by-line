@@ -71,12 +71,15 @@ export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEnt
             )}
             <div className="bg-[#e4ddd5] h-0.5 grow"></div>
             {week.isCurrentWeek && (
+              <>
               <button
                 onClick={onStartEntry}
-                className="px-4 py-2 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm"
-              >
-                + New Entry
-              </button>
+                  className="px-4 py-2 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm"
+                >
+                  + New Entry
+                </button>
+                <div className="bg-[#e4ddd5] h-0.5 grow"></div>
+              </>
             )}
           </div>
           <StreakDisplay 

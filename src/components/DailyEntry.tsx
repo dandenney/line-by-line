@@ -17,9 +17,9 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   
   const questions = [
-    "What's the most important thing that happened today?",
-    "What did you learn or discover?",
-    "What are you grateful for today?"
+    "What did you learn today?",
+    "What was most confusing or challenging today?",
+    "What did you learn about how you learn?"
   ];
 
   const handleAnswerChange = (index: number, value: string) => {
@@ -63,7 +63,7 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
   }, [handleKeyDown]);
 
   const textareaStyles = `
-    w-full p-4 border border-gray-200 rounded-lg resize-none
+    w-full p-4 rounded-lg resize-none
     focus:outline-none focus:ring-2 focus:ring-[#1A2630] focus:border-transparent
     transition-all duration-200
     font-sans text-gray-700 placeholder-gray-400
