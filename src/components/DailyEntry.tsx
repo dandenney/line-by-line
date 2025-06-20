@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 interface Entry {
   id: number;
@@ -16,11 +16,11 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
   const [answers, setAnswers] = useState(['', '', '']);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
   
-  const questions = [
+  const questions = useMemo(() => [
     "What did you learn today?",
     "What was most confusing or challenging today?",
     "What did you learn about how you learn?"
-  ];
+  ], []);
 
   const handleAnswerChange = (index: number, value: string) => {
     const newAnswers = [...answers];

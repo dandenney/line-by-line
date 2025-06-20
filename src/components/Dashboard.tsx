@@ -35,6 +35,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     today.setHours(0, 0, 0, 0);
     
     let currentStreak = 0;
+    // eslint-disable-next-line prefer-const
     let checkDate = new Date(today);
     
     while (true) {
@@ -81,36 +82,6 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     }
     
     return demoEntries;
-  };
-
-  const handleNewEntry = (newEntry: Entry) => {
-    setEntries(prev => [newEntry, ...prev]);
-    
-    // Recalculate streak
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    let currentStreak = 0;
-    let checkDate = new Date(today);
-    
-    const allEntries = [newEntry, ...entries];
-    
-    while (true) {
-      const hasEntry = allEntries.some(entry => {
-        const entryDate = new Date(entry.date);
-        entryDate.setHours(0, 0, 0, 0);
-        return entryDate.getTime() === checkDate.getTime();
-      });
-      
-      if (hasEntry) {
-        currentStreak++;
-        checkDate.setDate(checkDate.getDate() - 1);
-      } else {
-        break;
-      }
-    }
-    
-    setStreak(currentStreak);
   };
 
   return (

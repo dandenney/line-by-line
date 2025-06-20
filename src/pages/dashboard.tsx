@@ -5,16 +5,10 @@ import Dashboard from '../components/Dashboard';
 import DailyEntry from '../components/DailyEntry';
 import PageTransition from '@/components/PageTransition';
 
-interface Entry {
-  id: number;
-  text: string;
-  date: Date;
-}
-
 export default function DashboardPage() {
   const [showEntry, setShowEntry] = useState(false);
 
-  const handleSaveEntry = (entry: Entry) => {
+  const handleSaveEntry = () => {
     setShowEntry(false);
   };
 
