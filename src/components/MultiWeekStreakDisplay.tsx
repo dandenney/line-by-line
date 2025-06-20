@@ -49,12 +49,8 @@ export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEnt
             delay: weekIndex * 0.1,
             ease: [0.4, 0.0, 0.2, 1],
           }}
-          className="bg-white rounded-lg shadow-md p-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-700 font-serif">
-              Week {week.weekNumber}
-            </h3>
             {weekIndex === 0 && (
               <button
                 onClick={onStartEntry}

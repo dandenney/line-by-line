@@ -77,10 +77,8 @@ export default function StreakDisplay({ entries, streakDays = [1, 2, 3, 4, 5], s
         return 'bg-[#1A2630] text-white shadow-md';
       case 'missed':
         return 'bg-red-100 text-red-700 border border-red-200';
-      case 'today':
-        return 'bg-[#1A2630] text-white shadow-md border-2 border-[#2A3640]';
       case 'future':
-        return 'bg-gray-50 text-gray-500 border border-gray-200';
+        return 'border-2 border-[#cfc3b7]';
       case 'opted-out':
         return 'bg-[#F5F3EE] text-gray-400 border border-gray-100';
     }
@@ -177,10 +175,6 @@ export default function StreakDisplay({ entries, streakDays = [1, 2, 3, 4, 5], s
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-[#1A2630] rounded"></div>
             <span>Completed</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 bg-[#1A2630] rounded border-2 border-[#2A3640]"></div>
-            <span>Today</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div>
