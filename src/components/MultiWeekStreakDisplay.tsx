@@ -1,24 +1,23 @@
 import { motion } from 'motion/react';
 import StreakDisplay from './StreakDisplay';
-
-interface Entry {
-  id: number;
-  text: string;
-  date: Date;
-}
+import { FrontendEntry } from '@/types/database';
 
 interface MultiWeekStreakDisplayProps {
-  entries: Entry[];
+  entries: FrontendEntry[];
   streakDays: number[];
   onStartEntry: () => void;
 }
 
 export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEntry }: MultiWeekStreakDisplayProps) {
-  // Generate 4 weeks of data (current week + 3 past weeks)
+  // Generate weeks of data, but only show weeks that have entries or are the current week
   const weeks = [];
   const today = new Date();
   
-  for (let weekOffset = 0; weekOffset < 4; weekOffset++) {
+  // For new users, only show current week and past weeks with entries
+  const hasEntries = entries.length > 0;
+  const maxWeeks = hasEntries ? 4 : 1; // Show only current week for new users
+  
+  for (let weekOffset = 0; weekOffset < maxWeeks; weekOffset++) {
     // Calculate the start of each week (Sunday)
     const weekStart = new Date(today);
     const daysToSubtract = today.getDay() + (weekOffset * 7);
@@ -31,6 +30,16 @@ export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEnt
       weekEnd.setDate(weekStart.getDate() + 6);
       return entryDate >= weekStart && entryDate <= weekEnd;
     });
+    
+    // For new users, only show current week
+    if (!hasEntries && weekOffset > 0) {
+      break;
+    }
+    
+    // For users with entries, only show weeks that have entries or are current week
+    if (hasEntries && weekOffset > 0 && weekEntries.length === 0) {
+      continue;
+    }
     
     // Generate week label
     let weekLabel: string;
