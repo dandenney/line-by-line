@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import MultiWeekStreakDisplay from './MultiWeekStreakDisplay';
+import { useAuth } from '@/lib/auth-context';
 
 interface Entry {
   id: number;
@@ -15,6 +16,7 @@ interface DashboardProps {
 export default function Dashboard({ onStartEntry }: DashboardProps) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [streak, setStreak] = useState(0);
+  const { signOut, user } = useAuth();
 
   useEffect(() => {
     const savedEntries = localStorage.getItem('entries');
@@ -84,6 +86,10 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     return demoEntries;
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -97,7 +103,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     >
       <section className="bg-[#F5F3EE] p-4 rounded-[32px]">
         <div className="max-w-6xl mx-auto">
-          {/* Header with streak and prompt */}
+          {/* Header with user info and sign out */}
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -106,13 +112,27 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
               delay: 0.1,
               ease: [0.4, 0.0, 0.2, 1],
             }}
-            className="mb-8 text-center"
+            className="mb-8"
           >
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <span className="text-2xl">🔥</span>
-              <span className="text-2xl font-semibold font-serif">
-                {streak} day streak
-              </span>
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm text-gray-600">
+                Welcome, {user?.email}
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
+            
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <span className="text-2xl">🔥</span>
+                <span className="text-2xl font-semibold font-serif">
+                  {streak} day streak
+                </span>
+              </div>
             </div>
           </motion.div>
 
