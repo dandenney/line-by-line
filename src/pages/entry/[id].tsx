@@ -5,7 +5,6 @@ import PageTransition from '@/components/PageTransition';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { supabaseHelpers } from '@/lib/supabase-client';
 import { useAuth } from '@/lib/auth-context';
-import { Entry } from '@/types/database';
 
 interface FrontendEntry {
   id: number | string;
@@ -34,8 +33,8 @@ export default function EntryDetailPage() {
         
         if (supabaseEntry) {
           // Fix timezone issue: create date as local date, not UTC
-          const [year, month, day] = supabaseEntry.entry_date.split('-').map(Number);
-          const localDate = new Date(year, month - 1, day); // month is 0-indexed
+          // const [year, month, day] = supabaseEntry.entry_date.split('-').map(Number);
+          // const localDate = new Date(year, month - 1, day); // month is 0-indexed
           
           setEntry({
             id: supabaseEntry.id,

@@ -19,43 +19,12 @@ const createServiceRoleClient = () => {
 
 // Helper functions for common operations
 export const supabaseHelpers = {
-  // Debug authentication
-  auth: {
-    async debugAuth() {
-      console.log('🔍 Debugging authentication...');
-      
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      console.log('📊 Session:', session);
-      console.log('❌ Session error:', sessionError);
-      
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      console.log('👤 User:', user);
-      console.log('❌ User error:', userError);
-      
-      return { session, user, sessionError, userError };
-    },
-    
-    async refreshSession() {
-      console.log('🔄 Refreshing session...');
-      const { data, error } = await supabase.auth.refreshSession();
-      console.log('📊 Refresh result:', data);
-      console.log('❌ Refresh error:', error);
-      return { data, error };
-    }
-  },
-
   // Entry operations
   entries: {
     // Get all entries for a user
     async getAll(userId: string) {
-      console.log('🔍 Supabase Debug - Getting all entries for user:', userId);
-      
-      // First, debug authentication
-      await supabaseHelpers.auth.debugAuth();
-      
       try {
         // Try direct Supabase query first
-        console.log('🔄 Trying direct Supabase query...');
         const { data, error } = await supabase
           .from('entries')
           .select('*')
@@ -63,37 +32,30 @@ export const supabaseHelpers = {
           .order('entry_date', { ascending: false });
         
         if (error) {
-          console.error('❌ Direct query failed:', error);
           throw error;
         }
         
-        console.log('📊 Direct query result:', { data, error: null });
-        console.log('📊 Number of entries returned:', data?.length || 0);
-        
         if (data && data.length > 0) {
-          console.log('✅ Direct query successful');
           return data;
         }
         
-        console.log('⚠️ Direct query returned 0 entries, trying API endpoint...');
-        
-        // Fallback to API endpoint
-        const response = await fetch(`/api/entries?user_id=${userId}`);
+        // Fallback to API endpoint with auth header
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await fetch(`/api/entries?user_id=${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+        });
         
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
         }
         
         const apiData = await response.json();
-        
-        console.log('📊 API query result:', { data: apiData, error: null });
-        console.log('📊 Number of entries returned:', apiData?.length || 0);
-        
-        console.log('✅ API endpoint successful');
         return apiData;
         
       } catch (error) {
-        console.error('❌ All query methods failed:', error);
+        console.error('Error fetching entries:', error);
         throw error;
       }
     },
@@ -114,8 +76,13 @@ export const supabaseHelpers = {
     // Get entry by ID
     async getById(entryId: string) {
       try {
-        // Use API endpoint to bypass RLS issues
-        const response = await fetch(`/api/entries/${entryId}`);
+        // Use API endpoint with auth header
+        const { data: { session } } = await supabase.auth.getSession();
+        const response = await fetch(`/api/entries/${entryId}`, {
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+        });
         
         if (!response.ok) {
           if (response.status === 404) return null;
@@ -125,7 +92,7 @@ export const supabaseHelpers = {
         const data = await response.json();
         return data;
       } catch (error) {
-        console.error('❌ Error fetching entry by ID:', error);
+        console.error('Error fetching entry by ID:', error);
         throw error;
       }
     },
@@ -198,7 +165,7 @@ export const supabaseHelpers = {
         // Try to get existing settings
         const existing = await this.get(userId);
         if (existing) return existing;
-      } catch (error) {
+      } catch {
         // Settings don't exist, create them using service role
         const serviceClient = createServiceRoleClient();
         const { data, error: createError } = await serviceClient

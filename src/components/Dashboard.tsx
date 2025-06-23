@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import MultiWeekStreakDisplay from './MultiWeekStreakDisplay';
 import { useAuth } from '@/lib/auth-context';
 import { supabaseHelpers } from '@/lib/supabase-client';
-import { Entry, FrontendEntry } from '@/types/database';
+import { FrontendEntry } from '@/types/database';
 import MigrationBanner from './MigrationBanner';
 
 interface DashboardProps {
@@ -23,22 +23,16 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
         setIsLoading(false);
         return;
       }
-
-      console.log('🔍 Dashboard Debug - Starting data load...');
-      console.log('User ID:', user.id);
       
       setIsLoading(true);
       setError(null);
 
       try {
-        console.log('📡 Loading entries from Supabase...');
         // Load entries from Supabase
         const supabaseEntries = await supabaseHelpers.entries.getAll(user.id);
-        console.log('📊 Supabase entries received:', supabaseEntries);
-        console.log('📊 Number of Supabase entries:', supabaseEntries.length);
         
         // Convert to frontend format for backward compatibility
-        const frontendEntries: FrontendEntry[] = supabaseEntries.map((entry: any) => {
+        const frontendEntries: FrontendEntry[] = supabaseEntries.map((entry: { id: string; entry_date: string; content: string }) => {
           // Fix timezone issue: create date as local date, not UTC
           const [year, month, day] = entry.entry_date.split('-').map(Number);
           const localDate = new Date(year, month - 1, day); // month is 0-indexed
@@ -50,30 +44,21 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
           };
         });
         
-        console.log('🔄 Converted to frontend format:', frontendEntries);
-        console.log('🔄 Number of frontend entries:', frontendEntries.length);
-        
         setEntries(frontendEntries);
         
-        console.log('📈 Getting current streak...');
         // Get current streak
         const currentStreak = await supabaseHelpers.functions.getCurrentStreak(user.id);
-        console.log('🔥 Current streak:', currentStreak);
         setStreak(currentStreak);
         
-        console.log('✅ Data loading completed successfully');
-        
       } catch (error) {
-        console.error('❌ Error loading data:', error);
+        console.error('Error loading data:', error);
         setError('Failed to load your entries. Please refresh the page.');
         
         // Don't show dummy data - just show empty state
-        console.log('🔄 Setting empty state due to error');
         setEntries([]);
         setStreak(0);
       } finally {
         setIsLoading(false);
-        console.log('🏁 Data loading finished');
       }
     };
 
@@ -165,7 +150,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
                 <span>{error}</span>
               </div>
               <p className="text-sm mt-2 text-yellow-600">
-                You're seeing demo data. Please check your connection and refresh the page.
+                You&apos;re seeing demo data. Please check your connection and refresh the page.
               </p>
             </motion.div>
           )}

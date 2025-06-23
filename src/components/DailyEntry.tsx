@@ -1,8 +1,7 @@
 import { motion } from 'motion/react';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { supabaseHelpers } from '@/lib/supabase-client';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { supabaseHelpers, supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/lib/auth-context';
-import { Entry } from '@/types/database';
 
 interface FrontendEntry {
   id: number | string;
@@ -68,22 +67,15 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
     
     setIsLoading(true);
     setError(null);
-
-    // Debug logs
-    console.log('--- Saving Entry Debug ---');
-    console.log('User:', user);
-    console.log('Entry Payload:', {
-      user_id: user.id,
-      entry_date: new Date().toISOString().split('T')[0],
-      content: combinedText
-    });
     
     try {
       // Use the API route instead of direct Supabase client
+      const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch('/api/entries', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({
           user_id: user.id,
@@ -98,7 +90,6 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
       }
 
       const entry = await response.json();
-      console.log('Entry created:', entry);
       
       // Convert to frontend format for backward compatibility
       const frontendEntry: FrontendEntry = {
@@ -113,7 +104,6 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
       setError('Failed to save entry. Please try again.');
     } finally {
       setIsLoading(false);
-      console.log('--- End Save Entry Debug ---');
     }
   }, [answers, questions, onSave, user]);
 

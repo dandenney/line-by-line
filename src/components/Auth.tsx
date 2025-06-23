@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useAuth } from '@/lib/auth-context'
 import { motion } from 'motion/react'
-import { checkRateLimit, getRateLimitRemaining } from '@/lib/rate-limit'
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true)
@@ -26,15 +25,6 @@ export default function Auth() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-
-    // Rate limiting check
-    const identifier = email || 'anonymous'
-    if (!checkRateLimit(identifier)) {
-      const remaining = getRateLimitRemaining(identifier)
-      setError(`Too many attempts. Please wait before trying again. (${remaining} attempts remaining)`)
-      setLoading(false)
-      return
-    }
 
     try {
       const { error } = isLogin 
