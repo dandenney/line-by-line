@@ -46,7 +46,7 @@ export default function Auth() {
       } else {
         // Success - user will be redirected by useEffect
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)

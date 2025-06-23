@@ -11,4 +11,8 @@ export default function AuthPage() {
       <Auth />
     </>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 } 

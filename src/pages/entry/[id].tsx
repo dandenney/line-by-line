@@ -76,4 +76,8 @@ export default function EntryDetailPage() {
       </PageTransition>
     </ProtectedRoute>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 } 

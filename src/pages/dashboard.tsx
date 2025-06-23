@@ -49,4 +49,8 @@ export default function DashboardPage() {
       </PageTransition>
     </ProtectedRoute>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 } 
