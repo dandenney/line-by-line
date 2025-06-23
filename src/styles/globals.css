@@ -1,15 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #e4ddd5;
   --foreground: #171717;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  
+  --bg-diagonal-stripes: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
+  --bg-diagonal-stripes-light: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(0, 0, 0, 0.02) 3px, rgba(0, 0, 0, 0.02) 6px);
+  --bg-diagonal-stripes-subtle: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0, 0, 0, 0.015) 4px, rgba(0, 0, 0, 0.015) 8px);
+  --bg-diagonal-stripes-conic: conic-gradient(from 45deg, transparent 0deg 90deg, rgba(0, 0, 0, 0.03) 90deg 180deg, transparent 180deg 270deg, rgba(0, 0, 0, 0.03) 270deg 360deg);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +28,62 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Diagonal striped backgrounds */
+.diagonal-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+.diagonal-stripes-light {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.02) 3px,
+    rgba(0, 0, 0, 0.02) 6px
+  );
+}
+
+.diagonal-stripes-subtle {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(0, 0, 0, 0.015) 4px,
+    rgba(0, 0, 0, 0.015) 8px
+  );
+}
+
+/* Alternative: CSS conic-gradient for more complex patterns */
+.diagonal-stripes-conic {
+  background-image: conic-gradient(
+    from 45deg,
+    transparent 0deg 90deg,
+    rgba(0, 0, 0, 0.03) 90deg 180deg,
+    transparent 180deg 270deg,
+    rgba(0, 0, 0, 0.03) 270deg 360deg
+  );
+  background-size: 8px 8px;
+}
+
+/* Subtle border utilities */
+.border-subtle {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.border-very-subtle {
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.border-gradient-subtle {
+  border: 1px solid;
+  border-image: linear-gradient(45deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02)) 1;
 }
