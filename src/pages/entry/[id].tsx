@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import PageTransition from '@/components/PageTransition';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 interface Entry {
   id: number;
@@ -44,33 +45,39 @@ export default function EntryDetailPage() {
   }
 
   return (
-    <PageTransition>
-      <div className="min-h-screen bg-[#F5F3EE] text-[#1A2630] font-serif p-8">
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8 mt-12">
-          <Link
-            href="/dashboard"
-            className="mb-6 text-[#1A2630] hover:underline"
-          >
-            ← Back to Dashboard
-          </Link>
-          {entry ? (
-            <>
-              <div className="mb-4 text-gray-500 text-sm">
-                {new Date(entry.date).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </div>
-              <div className="text-lg whitespace-pre-line">
-                {entry.text}
-              </div>
-            </>
-          ) : (
-            <div className="text-gray-500">Entry not found.</div>
-          )}
+    <ProtectedRoute>
+      <PageTransition>
+        <div className="min-h-screen bg-[#F5F3EE] text-[#1A2630] font-serif p-8">
+          <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8 mt-12">
+            <Link
+              href="/dashboard"
+              className="mb-6 text-[#1A2630] hover:underline"
+            >
+              ← Back to Dashboard
+            </Link>
+            {entry ? (
+              <>
+                <div className="mb-4 text-gray-500 text-sm">
+                  {new Date(entry.date).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </div>
+                <div className="text-lg whitespace-pre-line">
+                  {entry.text}
+                </div>
+              </>
+            ) : (
+              <div className="text-gray-500">Entry not found.</div>
+            )}
+          </div>
         </div>
-      </div>
-    </PageTransition>
+      </PageTransition>
+    </ProtectedRoute>
   );
+}
+
+export async function getServerSideProps() {
+  return { props: {} };
 } 

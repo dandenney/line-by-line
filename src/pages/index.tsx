@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import PageTransition from '@/components/PageTransition';
+import { useAuth } from '@/lib/auth-context';
 
 interface Entry {
   id: number;
@@ -13,6 +14,7 @@ export default function Home() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [currentEntry, setCurrentEntry] = useState('');
   const [email, setEmail] = useState('');
+  const { user } = useAuth();
 
   const handleSaveEntry = () => {
     if (!currentEntry.trim()) return;
@@ -29,7 +31,7 @@ export default function Home() {
 
   const handleWaitlistSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Waitlist email:', email);
+    // TODO: Implement waitlist functionality
     setEmail('');
   };
 
@@ -112,20 +114,40 @@ export default function Home() {
         <p className="text-xl mb-12 max-w-2xl">
           Write privately. Think clearly. Share when you&apos;re ready.
         </p>
-        <div className="space-x-4">
-          <Link
-            href="/dashboard"
-            className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition inline-block"
-          >
-            Try the Demo
-          </Link>
-          <button
-            onClick={() => scrollToSection('waitlist')}
-            className="px-8 py-3 border-2 border-[#1A2630] rounded-lg hover:bg-[#1A2630] hover:text-white transition"
-          >
-            Join the Waitlist
-          </button>
-        </div>
+        
+        {user ? (
+          // User is authenticated - show dashboard link
+          <div className="space-x-4">
+            <Link
+              href="/dashboard"
+              className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition inline-block"
+            >
+              Go to Journal
+            </Link>
+          </div>
+        ) : (
+          // User is not authenticated - show demo and auth options
+          <div className="space-x-4">
+            <Link
+              href="/dashboard"
+              className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition inline-block"
+            >
+              Try the Demo
+            </Link>
+            <Link
+              href="/auth"
+              className="px-8 py-3 border-2 border-[#1A2630] rounded-lg hover:bg-[#1A2630] hover:text-white transition"
+            >
+              Sign In / Sign Up
+            </Link>
+            <button
+              onClick={() => scrollToSection('waitlist')}
+              className="px-8 py-3 border-2 border-[#1A2630] rounded-lg hover:bg-[#1A2630] hover:text-white transition"
+            >
+              Join the Waitlist
+            </button>
+          </div>
+        )}
       </section>
 
         {/* Demo Section */}
