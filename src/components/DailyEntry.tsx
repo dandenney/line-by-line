@@ -1,26 +1,52 @@
 import { motion } from 'motion/react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { supabaseHelpers } from '@/lib/supabase-client';
+import { useAuth } from '@/lib/auth-context';
+import { Entry } from '@/types/database';
 
-interface Entry {
-  id: number;
+interface FrontendEntry {
+  id: number | string;
   text: string;
   date: Date;
 }
 
 interface DailyEntryProps {
-  onSave: (entry: Entry) => void;
+  onSave: (entry: FrontendEntry) => void;
   onBack: () => void;
 }
 
 export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
   const [answers, setAnswers] = useState(['', '', '']);
-  const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
-  
-  const questions = useMemo(() => [
+  const [questions, setQuestions] = useState<string[]>([
     "What did you learn today?",
     "What was most confusing or challenging today?",
     "What did you learn about how you learn?"
-  ], []);
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const { user } = useAuth();
+
+  // Load user's questions on component mount
+  useEffect(() => {
+    const loadQuestions = async () => {
+      if (!user) return;
+      
+      try {
+        const userQuestions = await supabaseHelpers.functions.getUserQuestions(user.id);
+        if (userQuestions && userQuestions.length > 0) {
+          setQuestions(userQuestions);
+          // Initialize answers array to match question count
+          setAnswers(new Array(userQuestions.length).fill(''));
+        }
+      } catch (error) {
+        console.error('Error loading questions:', error);
+        // Keep default questions if loading fails
+      }
+    };
+
+    loadQuestions();
+  }, [user]);
 
   const handleAnswerChange = (index: number, value: string) => {
     const newAnswers = [...answers];
@@ -28,27 +54,68 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
     setAnswers(newAnswers);
   };
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
+    if (!user) {
+      setError('You must be logged in to save entries');
+      return;
+    }
+
     const combinedText = answers
       .map((answer, index) => `${questions[index]}\n${answer}`)
       .join('\n\n');
     
     if (!combinedText.trim()) return;
     
-    const entry: Entry = {
-      id: Date.now(),
-      text: combinedText,
-      date: new Date(),
-    };
+    setIsLoading(true);
+    setError(null);
+
+    // Debug logs
+    console.log('--- Saving Entry Debug ---');
+    console.log('User:', user);
+    console.log('Entry Payload:', {
+      user_id: user.id,
+      entry_date: new Date().toISOString().split('T')[0],
+      content: combinedText
+    });
     
-    // Save to localStorage
-    const savedEntries = localStorage.getItem('entries');
-    const entries = savedEntries ? JSON.parse(savedEntries) : [];
-    entries.unshift(entry);
-    localStorage.setItem('entries', JSON.stringify(entries));
-    
-    onSave(entry);
-  }, [answers, questions, onSave]);
+    try {
+      // Use the API route instead of direct Supabase client
+      const response = await fetch('/api/entries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          entry_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+          content: combinedText
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save entry');
+      }
+
+      const entry = await response.json();
+      console.log('Entry created:', entry);
+      
+      // Convert to frontend format for backward compatibility
+      const frontendEntry: FrontendEntry = {
+        id: entry.id,
+        text: entry.content,
+        date: new Date(entry.entry_date)
+      };
+      
+      onSave(frontendEntry);
+    } catch (error) {
+      console.error('Error saving entry:', error);
+      setError('Failed to save entry. Please try again.');
+    } finally {
+      setIsLoading(false);
+      console.log('--- End Save Entry Debug ---');
+    }
+  }, [answers, questions, onSave, user]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
@@ -100,6 +167,17 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
           </p>
         </motion.div>
 
+        {/* Error Message */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"
+          >
+            {error}
+          </motion.div>
+        )}
+
         {/* Questions and Answers */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -130,11 +208,12 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
                 ref={(el) => {
                   textareaRefs.current[index] = el;
                 }}
-                value={answers[index]}
+                value={answers[index] || ''}
                 onChange={(e) => handleAnswerChange(index, e.target.value)}
                 className={textareaStyles}
                 rows={3}
                 autoFocus={index === 0}
+                disabled={isLoading}
               />
             </motion.div>
           ))}
@@ -153,7 +232,8 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
         >
           <button
             onClick={onBack}
-            className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
+            disabled={isLoading}
           >
             Cancel
           </button>
@@ -163,9 +243,10 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
             </span>
             <button
               onClick={handleSave}
-              className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+              disabled={isLoading}
+              className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Entry
+              {isLoading ? 'Saving...' : 'Save Entry'}
             </button>
           </div>
         </motion.div>
