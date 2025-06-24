@@ -1,5 +1,7 @@
 import { motion } from 'motion/react';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { createClient } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth-context';
 
 interface Entry {
   id: number;
@@ -14,7 +16,9 @@ interface DailyEntryProps {
 
 export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
   const [answers, setAnswers] = useState(['', '', '']);
+  const [saving, setSaving] = useState(false);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const { user } = useAuth();
   
   const questions = useMemo(() => [
     "What did you learn today?",
@@ -28,27 +32,49 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
     setAnswers(newAnswers);
   };
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     const combinedText = answers
       .map((answer, index) => `${questions[index]}\n${answer}`)
       .join('\n\n');
     
-    if (!combinedText.trim()) return;
+    if (!combinedText.trim() || !user) return;
     
-    const entry: Entry = {
-      id: Date.now(),
-      text: combinedText,
-      date: new Date(),
-    };
+    setSaving(true);
     
-    // Save to localStorage
-    const savedEntries = localStorage.getItem('entries');
-    const entries = savedEntries ? JSON.parse(savedEntries) : [];
-    entries.unshift(entry);
-    localStorage.setItem('entries', JSON.stringify(entries));
-    
-    onSave(entry);
-  }, [answers, questions, onSave]);
+    try {
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const { data, error } = await supabase
+        .from('entries')
+        .insert([
+          {
+            user_id: user.id,
+            content: combinedText,
+            created_at: new Date().toISOString()
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving entry:', error);
+        return;
+      }
+
+      const entry: Entry = {
+        id: data.id,
+        text: data.content,
+        date: new Date(data.created_at),
+      };
+      
+      onSave(entry);
+    } catch (error) {
+      console.error('Error saving entry:', error);
+    } finally {
+      setSaving(false);
+    }
+  }, [answers, questions, onSave, user]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
@@ -163,9 +189,10 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
             </span>
             <button
               onClick={handleSave}
-              className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+              disabled={saving}
+              className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Entry
+              {saving ? 'Saving...' : 'Save Entry'}
             </button>
           </div>
         </motion.div>

@@ -1,0 +1,3 @@
+-- This is a placeholder migration for the initial setup
+-- The actual migration was already applied to the remote database
+-- This file exists to sync local and remote migration history 

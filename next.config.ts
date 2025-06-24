@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
   async headers() {
-    return [
+    const headers = [
       {
         // Apply these headers to all routes
         source: '/(.*)',
@@ -31,17 +31,21 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        // Apply HTTPS headers only in production
+    ];
+
+    if (process.env.NODE_ENV === 'production') {
+      headers.push({
         source: '/(.*)',
-        headers: process.env.NODE_ENV === 'production' ? [
+        headers: [
           {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains; preload',
           },
-        ] : [],
-      },
-    ];
+        ],
+      });
+    }
+
+    return headers;
   },
 };
 

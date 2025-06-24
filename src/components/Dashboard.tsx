@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import MultiWeekStreakDisplay from './MultiWeekStreakDisplay';
 import { useAuth } from '@/lib/auth-context';
+import { createClient } from '@/lib/supabase';
 
 interface Entry {
   id: number;
@@ -16,79 +17,80 @@ interface DashboardProps {
 export default function Dashboard({ onStartEntry }: DashboardProps) {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [streak, setStreak] = useState(0);
+  const [loading, setLoading] = useState(true);
   const { signOut, user } = useAuth();
 
   useEffect(() => {
-    const savedEntries = localStorage.getItem('entries');
-    let parsedEntries: Entry[] = [];
-    
-    if (savedEntries) {
-      parsedEntries = JSON.parse(savedEntries);
-    } else {
-      // Generate demo data if no entries exist
-      parsedEntries = generateDemoEntries();
-      localStorage.setItem('entries', JSON.stringify(parsedEntries));
-    }
-    
-    setEntries(parsedEntries);
-    
-    // Calculate streak
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    let currentStreak = 0;
-    // eslint-disable-next-line prefer-const
-    let checkDate = new Date(today);
-    
-    while (true) {
-      const hasEntry = parsedEntries.some(entry => {
-        const entryDate = new Date(entry.date);
-        entryDate.setHours(0, 0, 0, 0);
-        return entryDate.getTime() === checkDate.getTime();
-      });
+    const fetchEntries = async () => {
+      if (!user) return;
       
-      if (hasEntry) {
-        currentStreak++;
-        checkDate.setDate(checkDate.getDate() - 1);
-      } else {
-        break;
-      }
-    }
-    
-    setStreak(currentStreak);
-  }, []);
+      const supabase = createClient();
+      if (!supabase) return;
 
-  const generateDemoEntries = (): Entry[] => {
-    const demoEntries: Entry[] = [];
-    const today = new Date();
-    const streakDays = [1, 2, 3, 4, 5]; // Monday to Friday
-    
-    // Generate entries for the past 3 weeks
-    for (let dayOffset = 0; dayOffset < 21; dayOffset++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - dayOffset);
-      
-      // Only create entries for streak days (Mon-Fri)
-      const dayOfWeek = date.getDay();
-      if (streakDays.includes(dayOfWeek)) {
-        // Skip some days to make it more realistic (not every day)
-        if (Math.random() > 0.3) { // 70% chance of having an entry
-          const entry: Entry = {
-            id: date.getTime(),
-            text: `Demo entry for ${date.toLocaleDateString()} - This is sample content to show how the streak tracking works. In a real app, this would be your actual daily reflection.`,
-            date: date
-          };
-          demoEntries.push(entry);
+      try {
+        const { data, error } = await supabase
+          .from('entries')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching entries:', error);
+          return;
         }
+
+        const parsedEntries: Entry[] = data?.map(entry => ({
+          id: entry.id,
+          text: entry.content,
+          date: new Date(entry.created_at)
+        })) || [];
+
+        setEntries(parsedEntries);
+        
+        // Calculate streak
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        let currentStreak = 0;
+        let checkDate = new Date(today);
+        
+        while (true) {
+          const hasEntry = parsedEntries.some(entry => {
+            const entryDate = new Date(entry.date);
+            entryDate.setHours(0, 0, 0, 0);
+            return entryDate.getTime() === checkDate.getTime();
+          });
+          
+          if (hasEntry) {
+            currentStreak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+        
+        setStreak(currentStreak);
+      } catch (error) {
+        console.error('Error fetching entries:', error);
+      } finally {
+        setLoading(false);
       }
-    }
-    
-    return demoEntries;
-  };
+    };
+
+    fetchEntries();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#cfc3b7] p-4 flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
