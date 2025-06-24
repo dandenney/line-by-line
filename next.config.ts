@@ -4,35 +4,10 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactStrictMode: true,
   async headers() {
-<<<<<<< HEAD
-    const headers = [
-=======
     const securityHeaders = [
->>>>>>> main
       {
         key: 'X-DNS-Prefetch-Control',
         value: 'on'
-      },
-<<<<<<< HEAD
-    ];
-
-    if (process.env.NODE_ENV === 'production') {
-      headers.push({
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains; preload',
-          },
-        ],
-      });
-    }
-
-    return headers;
-=======
-      {
-        key: 'Strict-Transport-Security',
-        value: 'max-age=63072000; includeSubDomains; preload'
       },
       {
         key: 'X-XSS-Protection',
@@ -58,6 +33,10 @@ const nextConfig: NextConfig = {
 
     const prodHeaders = process.env.NODE_ENV === 'production' ? [
       {
+        key: 'Strict-Transport-Security',
+        value: 'max-age=63072000; includeSubDomains; preload'
+      },
+      {
         key: 'Content-Security-Policy',
         value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co; frame-ancestors 'none';"
       }
@@ -69,7 +48,6 @@ const nextConfig: NextConfig = {
         headers: [...securityHeaders, ...prodHeaders],
       },
     ];
->>>>>>> main
   },
 };
 

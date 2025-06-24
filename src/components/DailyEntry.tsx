@@ -1,11 +1,6 @@
 import { motion } from 'motion/react';
-<<<<<<< HEAD
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { createClient } from '@/lib/supabase';
-=======
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabaseHelpers, supabase } from '@/lib/supabase-client';
->>>>>>> main
 import { useAuth } from '@/lib/auth-context';
 
 interface FrontendEntry {
@@ -21,15 +16,7 @@ interface DailyEntryProps {
 
 export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
   const [answers, setAnswers] = useState(['', '', '']);
-<<<<<<< HEAD
-  const [saving, setSaving] = useState(false);
-  const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
-  const { user } = useAuth();
-  
-  const questions = useMemo(() => [
-=======
   const [questions, setQuestions] = useState<string[]>([
->>>>>>> main
     "What did you learn today?",
     "What was most confusing or challenging today?",
     "What did you learn about how you learn?"
@@ -67,56 +54,17 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
   };
 
   const handleSave = useCallback(async () => {
-<<<<<<< HEAD
-=======
     if (!user) {
       setError('You must be logged in to save entries');
       return;
     }
 
->>>>>>> main
     const combinedText = answers
       .map((answer, index) => `${questions[index]}\n${answer}`)
       .join('\n\n');
     
     if (!combinedText.trim() || !user) return;
     
-<<<<<<< HEAD
-    setSaving(true);
-    
-    try {
-      const supabase = createClient();
-      if (!supabase) return;
-
-      const { data, error } = await supabase
-        .from('entries')
-        .insert([
-          {
-            user_id: user.id,
-            content: combinedText,
-            created_at: new Date().toISOString()
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error saving entry:', error);
-        return;
-      }
-
-      const entry: Entry = {
-        id: data.id,
-        text: data.content,
-        date: new Date(data.created_at),
-      };
-      
-      onSave(entry);
-    } catch (error) {
-      console.error('Error saving entry:', error);
-    } finally {
-      setSaving(false);
-=======
     setIsLoading(true);
     setError(null);
     
@@ -156,7 +104,6 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
       setError('Failed to save entry. Please try again.');
     } finally {
       setIsLoading(false);
->>>>>>> main
     }
   }, [answers, questions, onSave, user]);
 
@@ -286,17 +233,10 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
             </span>
             <button
               onClick={handleSave}
-<<<<<<< HEAD
-              disabled={saving}
-              className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? 'Saving...' : 'Save Entry'}
-=======
               disabled={isLoading}
               className="px-8 py-3 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Saving...' : 'Save Entry'}
->>>>>>> main
             </button>
           </div>
         </motion.div>
