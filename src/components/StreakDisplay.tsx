@@ -1,21 +1,16 @@
 import { motion } from 'motion/react';
 import Link from 'next/link';
-
-interface Entry {
-  id: number;
-  text: string;
-  date: Date;
-}
+import { FrontendEntry } from '@/types/database';
 
 interface StreakDisplayProps {
-  entries: Entry[];
+  entries: FrontendEntry[];
   streakDays?: number[]; // 0 = Sunday, 1 = Monday, etc.
   weekStart?: Date; // Optional: if not provided, uses current week
 }
 
 interface DaySlot {
   date: Date;
-  entry?: Entry;
+  entry?: FrontendEntry;
   status: 'completed' | 'missed' | 'future' | 'today' | 'opted-out';
   isStreakDay: boolean;
 }
