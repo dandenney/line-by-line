@@ -52,9 +52,12 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
         today.setHours(0, 0, 0, 0);
         
         let currentStreak = 0;
-        let checkDate = new Date(today);
+        let dayOffset = 0;
         
         while (true) {
+          const checkDate = new Date(today);
+          checkDate.setDate(today.getDate() - dayOffset);
+          
           const hasEntry = parsedEntries.some(entry => {
             const entryDate = new Date(entry.date);
             entryDate.setHours(0, 0, 0, 0);
@@ -63,7 +66,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
           
           if (hasEntry) {
             currentStreak++;
-            checkDate.setDate(checkDate.getDate() - 1);
+            dayOffset++;
           } else {
             break;
           }
