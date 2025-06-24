@@ -1,10 +1,11 @@
 import { motion } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MultiWeekStreakDisplay from './MultiWeekStreakDisplay';
 import { useAuth } from '@/lib/auth-context';
 import { supabaseHelpers } from '@/lib/supabase-client';
 import { FrontendEntry } from '@/types/database';
 import MigrationBanner from './MigrationBanner';
+import { supabase } from '@/lib/supabase-client';
 
 interface DashboardProps {
   onStartEntry: () => void;
@@ -19,17 +20,47 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('Dashboard loadData called');
+      console.log('User state:', user);
+      console.log('User ID:', user?.id);
+      console.log('User email:', user?.email);
+      
       if (!user) {
+        console.log('No user found, skipping data load');
         setIsLoading(false);
         return;
       }
       
+      console.log('User found, starting data load...');
       setIsLoading(true);
       setError(null);
 
       try {
+        console.log('Attempting to load entries for user:', user.id);
+        
+        // Test if we can access the entries table
+        const { error: testError } = await supabase
+          .from('entries')
+          .select('count')
+          .limit(1);
+        
+        if (testError) {
+          console.error('Database connection test failed:', testError);
+          if (testError.code === '42P01') {
+            setError('Database table not found. Please check if migrations have been applied.');
+          } else {
+            setError('Database connection failed. Please check your configuration.');
+          }
+          setEntries([]);
+          setStreak(0);
+          return;
+        }
+        
+        console.log('Database connection test successful');
+        
         // Load entries from Supabase
         const supabaseEntries = await supabaseHelpers.entries.getAll(user.id);
+        console.log('Successfully loaded entries:', supabaseEntries);
         
         // Convert to frontend format for backward compatibility
         const frontendEntries: FrontendEntry[] = supabaseEntries.map((entry: { id: string; entry_date: string; content: string }) => {
@@ -44,20 +75,33 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
           };
         });
         
+        console.log('Converted to frontend entries:', frontendEntries);
         setEntries(frontendEntries);
         
-        // Get current streak
-        const currentStreak = await supabaseHelpers.functions.getCurrentStreak(user.id);
-        setStreak(currentStreak);
+        // Temporarily disable streak calculation until database functions are fixed
+        console.log('Skipping streak calculation for now');
+        setStreak(0);
+        
+        // TODO: Re-enable when database functions are working
+        // const currentStreak = await supabaseHelpers.functions.getCurrentStreak(user.id);
+        // console.log('Successfully loaded streak:', currentStreak);
+        // setStreak(currentStreak);
         
       } catch (error) {
         console.error('Error loading data:', error);
+        console.error('Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          error: error
+        });
+        
         setError('Failed to load your entries. Please refresh the page.');
         
         // Don't show dummy data - just show empty state
         setEntries([]);
         setStreak(0);
       } finally {
+        console.log('Data loading completed, setting isLoading to false');
         setIsLoading(false);
       }
     };
@@ -65,9 +109,23 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     loadData();
   }, [user]);
 
-  const handleSignOut = async () => {
-    await signOut();
-  };
+  const handleSignOut = useCallback(async () => {
+    console.log('Sign out clicked');
+    try {
+      await signOut();
+      console.log('Sign out successful');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  }, [signOut]);
+
+  // Expose signOut function to window for debugging
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as { debugSignOut?: () => void }).debugSignOut = handleSignOut;
+      console.log('Debug: signOut function available at window.debugSignOut()');
+    }
+  }, [handleSignOut]);
 
   if (isLoading) {
     return (
@@ -100,6 +158,16 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
       }}
       className="min-h-screen bg-[#cfc3b7] p-4"
     >
+      {/* Fallback logout button - always visible */}
+      <div className="fixed top-4 right-4 z-50">
+        <button
+          onClick={handleSignOut}
+          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
+        >
+          Emergency Logout
+        </button>
+      </div>
+
       <section className="bg-[#F5F3EE] p-4 rounded-[32px]">
         <div className="max-w-6xl mx-auto">
           {/* Header with user info and sign out */}

@@ -1,7 +1,8 @@
 import { motion } from 'motion/react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { supabaseHelpers, supabase } from '@/lib/supabase-client';
+import { supabase } from '@/lib/supabase-client';
 import { useAuth } from '@/lib/auth-context';
+import { getLocalDateString } from '@/lib/utils';
 
 interface FrontendEntry {
   id: number | string;
@@ -15,32 +16,32 @@ interface DailyEntryProps {
 }
 
 export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
-  const [answers, setAnswers] = useState(['', '', '']);
   const [questions, setQuestions] = useState<string[]>([
     "What did you learn today?",
     "What was most confusing or challenging today?",
     "What did you learn about how you learn?"
   ]);
+  const [answers, setAnswers] = useState<string[]>(['', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
-  const { user } = useAuth();
+  const { user, session } = useAuth();
 
-  // Load user's questions on component mount
   useEffect(() => {
     const loadQuestions = async () => {
       if (!user) return;
       
       try {
-        const userQuestions = await supabaseHelpers.functions.getUserQuestions(user.id);
-        if (userQuestions && userQuestions.length > 0) {
-          setQuestions(userQuestions);
-          // Initialize answers array to match question count
-          setAnswers(new Array(userQuestions.length).fill(''));
-        }
+        // For now, use default questions
+        // TODO: Load from user settings or question templates
+        setQuestions([
+          "What did you learn today?",
+          "What was most confusing or challenging today?",
+          "What did you learn about how you learn?"
+        ]);
       } catch (error) {
         console.error('Error loading questions:', error);
-        // Keep default questions if loading fails
+        // Fallback to default questions
       }
     };
 
@@ -54,48 +55,81 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
   };
 
   const handleSave = useCallback(async () => {
+    console.log('handleSave called');
+    console.log('User:', user);
+    console.log('Session:', session);
+    console.log('Session user:', session?.user);
+    
     if (!user) {
-      setError('You must be logged in to save entries');
+      console.error('No user found');
+      setError('Authentication required. Please log in again.');
+      return;
+    }
+    
+    if (!session) {
+      console.error('No session found');
+      setError('Session expired. Please log in again.');
       return;
     }
 
-    const combinedText = answers
-      .map((answer, index) => `${questions[index]}\n${answer}`)
-      .join('\n\n');
-    
-    if (!combinedText.trim()) return;
-    
+    const combinedText = questions.map((question, index) => {
+      const answer = answers[index] || '';
+      return `${question}\n\n${answer}`;
+    }).join('\n\n---\n\n');
+
+    if (!combinedText.trim()) {
+      setError('Please answer at least one question before saving.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     
     try {
-      // Use the API route instead of direct Supabase client
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch('/api/entries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({
+      console.log('Saving entry for user:', user.id);
+      console.log('Session user ID:', session.user.id);
+      console.log('Entry content:', combinedText);
+      
+      // Get current date in user's local timezone
+      const localDate = getLocalDateString();
+      console.log('Local date:', localDate);
+      console.log('Current time:', new Date().toLocaleString());
+      
+      // Use direct Supabase client with session
+      const { data, error } = await supabase
+        .from('entries')
+        .insert({
           user_id: user.id,
-          entry_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+          entry_date: localDate, // Use local date instead of UTC
           content: combinedText
         })
-      });
+        .select()
+        .single();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save entry');
+      if (error) {
+        console.error('Supabase insert error:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        // If it's an RLS error, the policies might not be set up
+        if (error.message.includes('row-level security policy')) {
+          throw new Error('Database security policies not configured. Please contact support.');
+        }
+        
+        throw new Error(error.message || 'Failed to save entry');
       }
 
-      const entry = await response.json();
+      console.log('Successfully saved entry:', data);
       
       // Convert to frontend format for backward compatibility
       const frontendEntry: FrontendEntry = {
-        id: entry.id,
-        text: entry.content,
-        date: new Date(entry.entry_date)
+        id: data.id,
+        text: data.content,
+        date: new Date(data.entry_date) // This will be in local timezone
       };
       
       onSave(frontendEntry);
@@ -105,7 +139,7 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [answers, questions, onSave, user]);
+  }, [answers, questions, onSave, user, session]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
