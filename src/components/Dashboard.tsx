@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MultiWeekStreakDisplay from './MultiWeekStreakDisplay';
 import { useAuth } from '@/lib/auth-context';
 import { supabaseHelpers } from '@/lib/supabase-client';
@@ -39,7 +39,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
         console.log('Attempting to load entries for user:', user.id);
         
         // Test if we can access the entries table
-        const { data: testData, error: testError } = await supabase
+        const { error: testError } = await supabase
           .from('entries')
           .select('count')
           .limit(1);
@@ -109,7 +109,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     loadData();
   }, [user]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     console.log('Sign out clicked');
     try {
       await signOut();
@@ -117,12 +117,12 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     } catch (error) {
       console.error('Sign out error:', error);
     }
-  };
+  }, [signOut]);
 
   // Expose signOut function to window for debugging
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).debugSignOut = handleSignOut;
+      (window as { debugSignOut?: () => void }).debugSignOut = handleSignOut;
       console.log('Debug: signOut function available at window.debugSignOut()');
     }
   }, [handleSignOut]);
