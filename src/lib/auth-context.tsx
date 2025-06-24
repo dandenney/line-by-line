@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
-import { createClient } from './supabase'
+import { supabase } from './supabase-client'
 
 interface AuthContextType {
   user: User | null
@@ -19,13 +19,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false)
-      return
-    }
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -46,10 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase])
+  }, [])
 
   const signIn = async (email: string, password: string) => {
-    if (!supabase) return { error: { message: 'Supabase client not available', name: 'ClientError' } as AuthError }
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -58,7 +52,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string) => {
-    if (!supabase) return { error: { message: 'Supabase client not available', name: 'ClientError' } as AuthError }
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -67,7 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    if (!supabase) return
     await supabase.auth.signOut()
   }
 

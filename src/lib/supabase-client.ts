@@ -24,7 +24,9 @@ export const supabaseHelpers = {
     // Get all entries for a user
     async getAll(userId: string) {
       try {
-        // Try direct Supabase query first
+        console.log('Fetching entries for user:', userId);
+        
+        // Use direct Supabase query
         const { data, error } = await supabase
           .from('entries')
           .select('*')
@@ -32,27 +34,12 @@ export const supabaseHelpers = {
           .order('entry_date', { ascending: false });
         
         if (error) {
+          console.error('Supabase query error:', error);
           throw error;
         }
         
-        if (data && data.length > 0) {
-          return data;
-        }
-        
-        // Fallback to API endpoint with auth header
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch(`/api/entries?user_id=${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-        
-        const apiData = await response.json();
-        return apiData;
+        console.log('Successfully fetched entries:', data);
+        return data || [];
         
       } catch (error) {
         console.error('Error fetching entries:', error);
