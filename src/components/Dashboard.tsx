@@ -135,7 +135,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
                 if (hasEntry) {
                   streak++;
                   console.log(`  🔥 Streak increased to: ${streak}`);
-                  checkDate.setDate(checkDate.getDate() - 1);
+                  checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
                 } else {
                   console.log(`  ❌ No entry found, breaking streak at ${checkDate.toDateString()}`);
                   break;
@@ -143,7 +143,7 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
               } else {
                 console.log(`  ⏭️  Not a streak day, skipping ${checkDate.toDateString()}`);
                 // Not a streak day, move to previous day
-                checkDate.setDate(checkDate.getDate() - 1);
+                checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
               }
             }
             
