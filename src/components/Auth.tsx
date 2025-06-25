@@ -11,7 +11,7 @@ export default function Auth() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { signIn, signUp, user } = useAuth()
+  const { signIn, signUp, user, setJustAuthenticated } = useAuth()
   const router = useRouter()
 
   // Redirect if user is already authenticated
@@ -34,6 +34,8 @@ export default function Auth() {
       if (error) {
         setError(error.message)
       } else {
+        // Set the flag to indicate this is a new authentication
+        setJustAuthenticated(true)
         // Success - user will be redirected by useEffect
       }
     } catch {
