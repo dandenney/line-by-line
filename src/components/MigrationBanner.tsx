@@ -1,17 +1,28 @@
 import { motion } from 'motion/react';
+import { useState } from 'react';
 import { useMigration } from '@/lib/migration';
 import { useAuth } from '@/lib/auth-context';
 
 export default function MigrationBanner() {
   const { isMigrating, migrationResult, migrateData, shouldMigrate, migrationStatus } = useMigration();
   const { user } = useAuth();
+  const [isDismissed, setIsDismissed] = useState(false);
 
-  if (!shouldMigrate || !user) {
+  if (!shouldMigrate || !user || isDismissed) {
     return null;
   }
 
   const handleMigrate = async () => {
     await migrateData(user.id);
+  };
+
+  const handleClearLocalStorage = () => {
+    localStorage.removeItem('entries');
+    setIsDismissed(true);
+  };
+
+  const handleDismiss = () => {
+    setIsDismissed(true);
   };
 
   return (
@@ -22,9 +33,18 @@ export default function MigrationBanner() {
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="text-lg font-medium text-blue-900 mb-2">
-            📦 Migrate Your Data
-          </h3>
+          <div className="flex items-start justify-between mb-2">
+            <h3 className="text-lg font-medium text-blue-900">
+              📦 Migrate Your Data
+            </h3>
+            <button
+              onClick={handleDismiss}
+              className="text-blue-400 hover:text-blue-600 transition-colors ml-2"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
           <p className="text-blue-700 mb-3">
             We found {migrationStatus.entryCount} journal entries stored locally. 
             Would you like to migrate them to your secure cloud storage?
@@ -55,15 +75,23 @@ export default function MigrationBanner() {
           )}
         </div>
         
-        <div className="ml-4">
+        <div className="ml-4 flex flex-col gap-2">
           {!migrationResult && (
-            <button
-              onClick={handleMigrate}
-              disabled={isMigrating}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isMigrating ? 'Migrating...' : 'Migrate Now'}
-            </button>
+            <>
+              <button
+                onClick={handleMigrate}
+                disabled={isMigrating}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isMigrating ? 'Migrating...' : 'Migrate Now'}
+              </button>
+              <button
+                onClick={handleClearLocalStorage}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Clear Local Data
+              </button>
+            </>
           )}
           
           {migrationResult?.success && (

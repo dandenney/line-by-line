@@ -78,14 +78,83 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
         console.log('Converted to frontend entries:', frontendEntries);
         setEntries(frontendEntries);
         
-        // Temporarily disable streak calculation until database functions are fixed
-        console.log('Skipping streak calculation for now');
-        setStreak(0);
-        
-        // TODO: Re-enable when database functions are working
-        // const currentStreak = await supabaseHelpers.functions.getCurrentStreak(user.id);
-        // console.log('Successfully loaded streak:', currentStreak);
-        // setStreak(currentStreak);
+        // Calculate streak using database function
+        try {
+          console.log('Calculating streak using database function...');
+          console.log('🔍 Database streak calculation debug:');
+          console.log('📅 Current date (UTC):', new Date().toISOString().split('T')[0]);
+          console.log('📅 Current date (local):', new Date().toLocaleDateString('en-CA'));
+          console.log('📝 Entry dates in database:', supabaseEntries.map(e => e.entry_date));
+          
+          const currentStreak = await supabaseHelpers.functions.getCurrentStreak(user.id);
+          console.log('Successfully loaded streak from database:', currentStreak);
+          setStreak(currentStreak);
+        } catch (streakError) {
+          console.error('Database streak calculation failed, using client-side fallback:', streakError);
+          
+          // Fallback: Calculate streak client-side
+          const calculateClientSideStreak = (entries: FrontendEntry[]): number => {
+            if (entries.length === 0) return 0;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            console.log('🔍 Client-side streak calculation debug:');
+            console.log('📅 Today:', today.toDateString(), 'Day of week:', today.getDay());
+            console.log('📝 All entries:', entries.map(e => ({
+              date: new Date(e.date).toDateString(),
+              dayOfWeek: new Date(e.date).getDay(),
+              text: e.text.substring(0, 50) + '...'
+            })));
+            
+            let streak = 0;
+            let checkDate = new Date(today);
+            
+            // Default to weekdays (Monday = 1, Tuesday = 2, etc.)
+            const streakDays = [1, 2, 3, 4, 5]; // Monday to Friday
+            console.log('🎯 Streak days:', streakDays);
+            
+            while (true) {
+              const dayOfWeek = checkDate.getDay();
+              const isStreakDay = streakDays.includes(dayOfWeek);
+              
+              console.log(`🔍 Checking date: ${checkDate.toDateString()}, Day of week: ${dayOfWeek}, Is streak day: ${isStreakDay}`);
+              
+              if (isStreakDay) {
+                // Check if there's an entry for this date
+                const hasEntry = entries.some(entry => {
+                  const entryDate = new Date(entry.date);
+                  entryDate.setHours(0, 0, 0, 0);
+                  const dateMatch = entryDate.getTime() === checkDate.getTime();
+                  console.log(`  📝 Comparing with entry: ${entryDate.toDateString()}, Match: ${dateMatch}`);
+                  return dateMatch;
+                });
+                
+                console.log(`  ✅ Has entry for ${checkDate.toDateString()}: ${hasEntry}`);
+                
+                if (hasEntry) {
+                  streak++;
+                  console.log(`  🔥 Streak increased to: ${streak}`);
+                  checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
+                } else {
+                  console.log(`  ❌ No entry found, breaking streak at ${checkDate.toDateString()}`);
+                  break;
+                }
+              } else {
+                console.log(`  ⏭️  Not a streak day, skipping ${checkDate.toDateString()}`);
+                // Not a streak day, move to previous day
+                checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
+              }
+            }
+            
+            console.log(`🎉 Final streak count: ${streak}`);
+            return streak;
+          };
+          
+          const clientSideStreak = calculateClientSideStreak(frontendEntries);
+          console.log('Client-side streak calculation result:', clientSideStreak);
+          setStreak(clientSideStreak);
+        }
         
       } catch (error) {
         console.error('Error loading data:', error);
@@ -119,14 +188,6 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
     }
   }, [signOut]);
 
-  // Expose signOut function to window for debugging
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as { debugSignOut?: () => void }).debugSignOut = handleSignOut;
-      console.log('Debug: signOut function available at window.debugSignOut()');
-    }
-  }, [handleSignOut]);
-
   if (isLoading) {
     return (
       <motion.div
@@ -158,16 +219,6 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
       }}
       className="min-h-screen bg-[#cfc3b7] p-4"
     >
-      {/* Fallback logout button - always visible */}
-      <div className="fixed top-4 right-4 z-50">
-        <button
-          onClick={handleSignOut}
-          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
-        >
-          Emergency Logout
-        </button>
-      </div>
-
       <section className="bg-[#F5F3EE] p-4 rounded-[32px]">
         <div className="max-w-6xl mx-auto">
           {/* Header with user info and sign out */}
