@@ -8,9 +8,12 @@ interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
+  justAuthenticated: boolean
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signOut: () => Promise<void>
+  clearJustAuthenticated: () => void
+  setJustAuthenticated: (value: boolean) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -19,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [justAuthenticated, setJustAuthenticated] = useState(false)
 
   useEffect(() => {
     // Get initial session
@@ -63,13 +67,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  const clearJustAuthenticated = () => {
+    setJustAuthenticated(false)
+  }
+
   const value = {
     user,
     session,
     loading,
+    justAuthenticated,
     signIn,
     signUp,
     signOut,
+    clearJustAuthenticated,
+    setJustAuthenticated,
   }
 
   return (

@@ -9,17 +9,23 @@ import { useAuth } from '@/lib/auth-context';
 
 export default function DashboardPage() {
   const [showEntry, setShowEntry] = useState(false);
-  const { user } = useAuth();
+  const { user, justAuthenticated, setJustAuthenticated } = useAuth();
 
-  // Start authenticated users at the entry view
+  // Show daily entry view only for new authentications
   useEffect(() => {
-    if (user) {
+    if (user && justAuthenticated) {
       setShowEntry(true);
     }
-  }, [user]);
+  }, [user, justAuthenticated]);
 
   const handleSaveEntry = () => {
     setShowEntry(false);
+    setJustAuthenticated(false); // Clear the flag after saving
+  };
+
+  const handleBackFromEntry = () => {
+    setShowEntry(false);
+    setJustAuthenticated(false); // Clear the flag when going back
   };
 
   return (
@@ -36,7 +42,7 @@ export default function DashboardPage() {
               <DailyEntry
                 key="entry"
                 onSave={handleSaveEntry}
-                onBack={() => setShowEntry(false)}
+                onBack={handleBackFromEntry}
               />
             ) : (
               <Dashboard
