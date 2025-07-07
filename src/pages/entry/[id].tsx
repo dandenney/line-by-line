@@ -5,6 +5,7 @@ import PageTransition from '@/components/PageTransition';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { supabaseHelpers } from '@/lib/supabase-client';
 import { useAuth } from '@/lib/auth-context';
+import CommentSection from '@/components/CommentSection';
 
 interface FrontendEntry {
   id: number | string;
@@ -18,6 +19,7 @@ export default function EntryDetailPage() {
   const [entry, setEntry] = useState<FrontendEntry | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isToday, setIsToday] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -41,6 +43,11 @@ export default function EntryDetailPage() {
             text: supabaseEntry.content,
             date: supabaseEntry.entry_date // Keep as string for display
           });
+          
+          // Check if this entry is from today
+          const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format
+          setIsToday(supabaseEntry.entry_date === today);
+          
           return;
         }
         
@@ -107,16 +114,29 @@ export default function EntryDetailPage() {
               </div>
             ) : entry ? (
               <>
-                <div className="mb-4 text-gray-500 text-sm">
-                  {new Date(entry.date).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
+                <div className="flex justify-between items-start mb-4">
+                  <div className="text-gray-500 text-sm">
+                    {new Date(entry.date).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </div>
+                  {isToday && (
+                    <Link
+                      href={`/entry/${entry.id}/edit`}
+                      className="px-4 py-2 bg-[#1A2630] text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm"
+                    >
+                      Edit Entry
+                    </Link>
+                  )}
                 </div>
                 <div className="text-lg whitespace-pre-line">
                   {entry.text}
                 </div>
+                
+                {/* Comments Section */}
+                <CommentSection entryId={entry.id as string} />
               </>
             ) : (
               <div className="text-gray-500">Entry not found.</div>

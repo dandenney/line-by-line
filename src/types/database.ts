@@ -9,6 +9,11 @@ export interface Database {
         Insert: EntryInsert
         Update: EntryUpdate
       }
+      entry_comments: {
+        Row: EntryComment
+        Insert: EntryCommentInsert
+        Update: EntryCommentUpdate
+      }
       user_settings: {
         Row: UserSettings
         Insert: UserSettingsInsert
@@ -72,6 +77,34 @@ export interface EntryUpdate {
   id?: string
   user_id?: string
   entry_date?: string
+  content?: string
+  created_at?: string
+  updated_at?: string
+}
+
+// Entry Comment types
+export interface EntryComment {
+  id: string
+  entry_id: string
+  user_id: string
+  content: string
+  created_at: string
+  updated_at: string
+}
+
+export interface EntryCommentInsert {
+  id?: string
+  entry_id: string
+  user_id: string
+  content: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface EntryCommentUpdate {
+  id?: string
+  entry_id?: string
+  user_id?: string
   content?: string
   created_at?: string
   updated_at?: string
