@@ -7,15 +7,16 @@ import { getLocalDateString } from '@/lib/utils';
 interface FrontendEntry {
   id: number | string;
   text: string;
-  date: Date;
+  date: Date | string;
 }
 
 interface DailyEntryProps {
   onSave: (entry: FrontendEntry) => void;
   onBack: () => void;
+  existingEntry?: FrontendEntry | null;
 }
 
-export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
+export default function DailyEntry({ onSave, onBack, existingEntry }: DailyEntryProps) {
   const [questions, setQuestions] = useState<string[]>([
     "What did you learn today?",
     "What was most confusing or challenging today?",
@@ -47,6 +48,33 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
 
     loadQuestions();
   }, [user]);
+
+  // Load existing entry data if editing
+  useEffect(() => {
+    if (existingEntry) {
+      try {
+        // Parse the existing entry content to extract answers
+        const content = existingEntry.text;
+        const questionAnswerPairs = content.split('\n\n---\n\n');
+        
+        const newAnswers = questions.map((question, index) => {
+          if (index < questionAnswerPairs.length) {
+            const pair = questionAnswerPairs[index];
+            // Remove the question part and get just the answer
+            const lines = pair.split('\n\n');
+            if (lines.length >= 2) {
+              return lines.slice(1).join('\n\n'); // Everything after the first question
+            }
+          }
+          return '';
+        });
+        
+        setAnswers(newAnswers);
+      } catch (error) {
+        console.error('Error parsing existing entry:', error);
+      }
+    }
+  }, [existingEntry, questions]);
 
   const handleAnswerChange = (index: number, value: string) => {
     const newAnswers = [...answers];
@@ -95,16 +123,38 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
       console.log('Local date:', localDate);
       console.log('Current time:', new Date().toLocaleString());
       
-      // Use direct Supabase client with session
-      const { data, error } = await supabase
-        .from('entries')
-        .insert({
-          user_id: user.id,
-          entry_date: localDate, // Use local date instead of UTC
-          content: combinedText
-        })
-        .select()
-        .single();
+      let data;
+      let error;
+      
+      if (existingEntry) {
+        // Update existing entry
+        console.log('Updating existing entry:', existingEntry.id);
+        const result = await supabase
+          .from('entries')
+          .update({
+            content: combinedText,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingEntry.id)
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      } else {
+        // Create new entry
+        console.log('Creating new entry');
+        const result = await supabase
+          .from('entries')
+          .insert({
+            user_id: user.id,
+            entry_date: localDate, // Use local date instead of UTC
+            content: combinedText
+          })
+          .select()
+          .single();
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         console.error('Supabase insert error:', error);
@@ -184,10 +234,10 @@ export default function DailyEntry({ onSave, onBack }: DailyEntryProps) {
           className="text-center mb-8 font-serif"
         >
           <h2 className="text-2xl text-gray-600 mb-2">
-            Daily Reflection
+            {existingEntry ? 'Edit Today\'s Reflection' : 'Daily Reflection'}
           </h2>
           <p className="text-gray-500 text-sm">
-            Take a moment to reflect on your day
+            {existingEntry ? 'Update your thoughts from today' : 'Take a moment to reflect on your day'}
           </p>
         </motion.div>
 

@@ -120,6 +120,56 @@ export const supabaseHelpers = {
     }
   },
 
+  // Entry comments operations
+  comments: {
+    // Get all comments for an entry
+    async getByEntryId(entryId: string) {
+      const { data, error } = await supabase
+        .from('entry_comments')
+        .select('*')
+        .eq('entry_id', entryId)
+        .order('created_at', { ascending: true })
+      
+      if (error) throw error
+      return data
+    },
+
+    // Create new comment
+    async create(comment: Database['public']['Tables']['entry_comments']['Insert']) {
+      const { data, error } = await supabase
+        .from('entry_comments')
+        .insert(comment)
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data
+    },
+
+    // Update comment
+    async update(id: string, updates: Database['public']['Tables']['entry_comments']['Update']) {
+      const { data, error } = await supabase
+        .from('entry_comments')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (error) throw error
+      return data
+    },
+
+    // Delete comment
+    async delete(id: string) {
+      const { error } = await supabase
+        .from('entry_comments')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+    }
+  },
+
   // User settings operations
   userSettings: {
     // Get user settings
