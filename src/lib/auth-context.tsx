@@ -14,6 +14,7 @@ interface AuthContextType {
   signOut: () => Promise<void>
   clearJustAuthenticated: () => void
   setJustAuthenticated: (value: boolean) => void
+  setUser: (user: User | null) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth context - onAuthStateChange:', { event, session })
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
@@ -81,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     clearJustAuthenticated,
     setJustAuthenticated,
+    setUser,
   }
 
   return (
