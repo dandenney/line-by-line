@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import StreakDisplay from './StreakDisplay';
 import { FrontendEntry } from '@/types/database';
+import SavedPrompts from './SavedPrompts';
 
 interface MultiWeekStreakDisplayProps {
   entries: FrontendEntry[];
@@ -96,6 +97,22 @@ export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEnt
             streakDays={streakDays}
             weekStart={week.weekStart}
           />
+          
+          {/* Insert SavedPrompts after the current week */}
+          {week.isCurrentWeek && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.5,
+                delay: 0.3,
+                ease: [0.4, 0.0, 0.2, 1],
+              }}
+              className="mt-8"
+            >
+              <SavedPrompts />
+            </motion.div>
+          )}
         </motion.div>
       ))}
     </div>

@@ -5,13 +5,16 @@ import { useAuth } from '@/lib/auth-context';
 interface PromptSuggestionsProps {
   entryId: string;
   entryContent: string;
+  sourceEntryDate: string;
 }
 
-export default function PromptSuggestions({ entryId, entryContent }: PromptSuggestionsProps) {
+export default function PromptSuggestions({ entryId, entryContent, sourceEntryDate }: PromptSuggestionsProps) {
   const [prompts, setPrompts] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [savedPrompts, setSavedPrompts] = useState<string[]>([]);
+  const [savingPrompts, setSavingPrompts] = useState<Set<string>>(new Set());
   const { session } = useAuth();
 
   const generatePrompts = async () => {
@@ -47,6 +50,55 @@ export default function PromptSuggestions({ entryId, entryContent }: PromptSugge
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const savePrompt = async (promptText: string) => {
+    if (!session?.access_token) {
+      setError('Authentication required');
+      return;
+    }
+
+    setSavingPrompts(prev => new Set(prev).add(promptText));
+
+    try {
+      const response = await fetch('/api/prompts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          entryId,
+          promptText,
+          sourceEntryDate
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save prompt');
+      }
+
+      setSavedPrompts(prev => [...prev, promptText]);
+    } catch (error) {
+      console.error('Error saving prompt:', error);
+      setError(error instanceof Error ? error.message : 'Failed to save prompt');
+    } finally {
+      setSavingPrompts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(promptText);
+        return newSet;
+      });
+    }
+  };
+
+  const parsePrompts = (promptText: string): string[] => {
+    // Parse numbered prompts from the AI response
+    const lines = promptText.split('\n').filter(line => line.trim());
+    return lines
+      .filter(line => /^\d+\./.test(line.trim()))
+      .map(line => line.replace(/^\d+\.\s*/, '').trim())
+      .filter(prompt => prompt.length > 0);
   };
 
   // Only show if there's content in the entry
@@ -101,20 +153,40 @@ export default function PromptSuggestions({ entryId, entryContent }: PromptSugge
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+          className="bg-gray-50 border border-gray-200 rounded-lg p-4"
         >
-          <h4 className="font-medium text-blue-900 mb-3">💡 Writing Ideas</h4>
-          <div className="text-blue-800 whitespace-pre-line text-sm leading-relaxed">
-            {prompts}
+          <h4 className="font-medium text-gray-700 mb-3">💡 Writing Ideas</h4>
+          <div className="space-y-3">
+            {parsePrompts(prompts).map((prompt, index) => (
+              <div key={index} className="flex items-start gap-3 p-3 bg-white rounded border border-gray-200">
+                <div className="flex-1 text-gray-700 text-sm leading-relaxed">
+                  {prompt}
+                </div>
+                {savedPrompts.includes(prompt) ? (
+                  <span className="text-gray-600 text-xs font-medium px-2 py-1 bg-gray-100 rounded">
+                    Saved
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => savePrompt(prompt)}
+                    disabled={savingPrompts.has(prompt)}
+                    className="text-gray-600 hover:text-gray-800 text-xs font-medium px-2 py-1 bg-gray-100 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  >
+                    {savingPrompts.has(prompt) ? 'Saving...' : 'Save'}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
-          <div className="mt-4 pt-3 border-t border-blue-200">
+          <div className="mt-4 pt-3 border-t border-gray-200">
             <button
               onClick={() => {
                 setPrompts('');
                 setHasGenerated(false);
                 setError(null);
+                setSavedPrompts([]);
               }}
-              className="text-blue-600 hover:text-blue-800 text-sm underline"
+              className="text-gray-600 hover:text-gray-800 text-sm underline"
             >
               Generate new ideas
             </button>

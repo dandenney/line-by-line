@@ -140,6 +140,7 @@ export default function EntryDetailPage() {
                 <PromptSuggestions 
                   entryId={entry.id as string} 
                   entryContent={entry.text}
+                  sourceEntryDate={entry.date}
                 />
                 
                 {/* Comments Section */}
