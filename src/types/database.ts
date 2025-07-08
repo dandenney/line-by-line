@@ -29,6 +29,11 @@ export interface Database {
         Insert: StreakAnalyticsInsert
         Update: StreakAnalyticsUpdate
       }
+      writing_prompts: {
+        Row: WritingPrompt
+        Insert: WritingPromptInsert
+        Update: WritingPromptUpdate
+      }
     }
     Functions: {
       calculate_user_streak: {
@@ -198,6 +203,43 @@ export interface StreakAnalyticsUpdate {
   total_entries?: number
   last_entry_date?: string | null
   calculated_at?: string
+}
+
+// Writing Prompt types
+export interface WritingPrompt {
+  id: string
+  user_id: string
+  entry_id: string
+  prompt_text: string
+  source_entry_date: string
+  is_used: boolean
+  status: 'active' | 'written' | 'archived'
+  created_at: string
+  updated_at: string
+}
+
+export interface WritingPromptInsert {
+  id?: string
+  user_id: string
+  entry_id: string
+  prompt_text: string
+  source_entry_date: string
+  is_used?: boolean
+  status?: 'active' | 'written' | 'archived'
+  created_at?: string
+  updated_at?: string
+}
+
+export interface WritingPromptUpdate {
+  id?: string
+  user_id?: string
+  entry_id?: string
+  prompt_text?: string
+  source_entry_date?: string
+  is_used?: boolean
+  status?: 'active' | 'written' | 'archived'
+  created_at?: string
+  updated_at?: string
 }
 
 // Helper types for frontend use

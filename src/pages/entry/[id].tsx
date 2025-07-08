@@ -6,6 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { supabaseHelpers } from '@/lib/supabase-client';
 import { useAuth } from '@/lib/auth-context';
 import CommentSection from '@/components/CommentSection';
+import PromptSuggestions from '@/components/PromptSuggestions';
 
 interface FrontendEntry {
   id: number | string;
@@ -134,6 +135,13 @@ export default function EntryDetailPage() {
                 <div className="text-lg whitespace-pre-line">
                   {entry.text}
                 </div>
+                
+                {/* Writing Prompts Section */}
+                <PromptSuggestions 
+                  entryId={entry.id as string} 
+                  entryContent={entry.text}
+                  sourceEntryDate={entry.date}
+                />
                 
                 {/* Comments Section */}
                 <CommentSection entryId={entry.id as string} />
