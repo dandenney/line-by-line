@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '@/lib/auth-context';
 import { WritingPrompt } from '@/types/database';
@@ -10,11 +10,7 @@ export default function SavedPrompts() {
   const [updatingPrompts, setUpdatingPrompts] = useState<Set<string>>(new Set());
   const { session } = useAuth();
 
-  useEffect(() => {
-    loadPrompts();
-  }, [session]);
-
-  const loadPrompts = async () => {
+  const loadPrompts = useCallback(async () => {
     if (!session?.access_token) return;
 
     setIsLoading(true);
@@ -41,7 +37,11 @@ export default function SavedPrompts() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session]);
+
+  useEffect(() => {
+    loadPrompts();
+  }, [loadPrompts]);
 
   const updatePromptStatus = async (promptId: string, newStatus: 'active' | 'written' | 'archived') => {
     if (!session?.access_token) return;
@@ -84,40 +84,6 @@ export default function SavedPrompts() {
     }
   };
 
-  const deletePrompt = async (promptId: string) => {
-    if (!session?.access_token) return;
-
-    setUpdatingPrompts(prev => new Set(prev).add(promptId));
-
-    try {
-      const response = await fetch('/api/prompts', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ promptId }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete prompt');
-      }
-
-      // Remove from local state
-      setPrompts(prev => prev.filter(prompt => prompt.id !== promptId));
-    } catch (error) {
-      console.error('Error deleting prompt:', error);
-      setError(error instanceof Error ? error.message : 'Failed to delete prompt');
-    } finally {
-      setUpdatingPrompts(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(promptId);
-        return newSet;
-      });
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -148,7 +114,7 @@ export default function SavedPrompts() {
         animate={{ opacity: 1 }}
         className="bg-white rounded-lg shadow-sm p-6"
       >
-        <h3 className="text-lg font-medium text-gray-700 mb-2">Writing Prompts</h3>
+        <h3 className="text-xl font-medium text-gray-700 mb-2">Writing Prompts</h3>
         <p className="text-gray-700 text-sm">
           No saved prompts yet. Generate writing ideas from your entries to see them here.
         </p>
@@ -198,59 +164,59 @@ export default function SavedPrompts() {
                     : 'bg-gray-50 border-gray-200'
               }`}
             >
-                          <div className="flex items-start justify-between">
-              <div className="flex-1 max-w-2xl">
-                <div className="flex items-center gap-2 mb-2">
-                  {isWritten && (
-                    <span className="text-sm text-[#2d5a2d] bg-[#d4e6d4] px-2 py-1 rounded">
-                      ✓ Written
-                    </span>
-                  )}
-                  {isArchived && (
-                    <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      📁 Archived
-                    </span>
-                  )}
+              <div className="flex items-start justify-between">
+                <div className="flex-1 max-w-2xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    {isWritten && (
+                      <span className="text-sm text-[#2d5a2d] bg-[#d4e6d4] px-2 py-1 rounded">
+                        ✓ Written
+                      </span>
+                    )}
+                    {isArchived && (
+                      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        📁 Archived
+                      </span>
+                    )}
+                  </div>
+                  <p className={`text-base leading-relaxed ${
+                    isWritten ? 'text-[#2d5a2d]' : isArchived ? 'text-gray-500' : 'text-gray-700'
+                  }`}>
+                    {prompt.prompt_text}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    From entry on {formatDate(prompt.source_entry_date)}
+                  </p>
                 </div>
-                <p className={`text-base leading-relaxed ${
-                  isWritten ? 'text-[#2d5a2d]' : isArchived ? 'text-gray-500' : 'text-gray-700'
-                }`}>
-                  {prompt.prompt_text}
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
-                  From entry on {formatDate(prompt.source_entry_date)}
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 ml-6">
-                {isActive && (
-                  <>
+                <div className="flex flex-col gap-2 ml-6">
+                  {isActive && (
+                    <>
+                      <button
+                        onClick={() => updatePromptStatus(prompt.id, 'written')}
+                        disabled={updatingPrompts.has(prompt.id)}
+                        className="text-sm text-[#2d5a2d] hover:text-[#1a3d1a] px-4 py-2 rounded bg-[#d4e6d4] hover:bg-[#b8d4b8] transition-colors disabled:opacity-50 font-medium"
+                      >
+                        {updatingPrompts.has(prompt.id) ? 'Updating...' : 'I Wrote About This'}
+                      </button>
+                      <button
+                        onClick={() => updatePromptStatus(prompt.id, 'archived')}
+                        disabled={updatingPrompts.has(prompt.id)}
+                        className="text-sm text-gray-600 hover:text-gray-800 px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 font-medium"
+                      >
+                        {updatingPrompts.has(prompt.id) ? 'Updating...' : 'Archive'}
+                      </button>
+                    </>
+                  )}
+                  {(isWritten || isArchived) && (
                     <button
-                      onClick={() => updatePromptStatus(prompt.id, 'written')}
-                      disabled={updatingPrompts.has(prompt.id)}
-                      className="text-sm text-[#2d5a2d] hover:text-[#1a3d1a] px-4 py-2 rounded bg-[#d4e6d4] hover:bg-[#b8d4b8] transition-colors disabled:opacity-50 font-medium"
-                    >
-                      {updatingPrompts.has(prompt.id) ? 'Updating...' : 'I Wrote About This'}
-                    </button>
-                    <button
-                      onClick={() => updatePromptStatus(prompt.id, 'archived')}
+                      onClick={() => updatePromptStatus(prompt.id, 'active')}
                       disabled={updatingPrompts.has(prompt.id)}
                       className="text-sm text-gray-600 hover:text-gray-800 px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 font-medium"
                     >
-                      {updatingPrompts.has(prompt.id) ? 'Updating...' : 'Archive'}
+                      {updatingPrompts.has(prompt.id) ? 'Updating...' : 'Reactivate'}
                     </button>
-                  </>
-                )}
-                {(isWritten || isArchived) && (
-                  <button
-                    onClick={() => updatePromptStatus(prompt.id, 'active')}
-                    disabled={updatingPrompts.has(prompt.id)}
-                    className="text-sm text-gray-600 hover:text-gray-800 px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 font-medium"
-                  >
-                    {updatingPrompts.has(prompt.id) ? 'Updating...' : 'Reactivate'}
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
             </motion.div>
           );
         })}
