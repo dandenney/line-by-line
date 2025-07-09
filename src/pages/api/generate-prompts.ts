@@ -25,23 +25,19 @@ async function getAuthenticatedUser(req: NextApiRequest) {
 }
 
 const generateSharingPrompts = (entryText: string) => `
-You're a writing coach helping a developer reflect publicly on what they've learned.
+You're a developer and writing coach helping someone share what they've learned in a thoughtful way.
 
-Read the journal entry below and return **up to three concise, thoughtful prompt ideas** the user could use to write something shareable—a blog post, social media thread, or short video.
+Based on the journal entry below, suggest up to **three specific, authentic post ideas** that could be used for a blog, LinkedIn post, or social media thread.
 
-Each prompt should:
-- Be based on a real idea or theme in the entry
-- Encourage storytelling, teaching, or insight-sharing
-- Be specific enough to spark reflection or audience engagement
+The prompts should:
+- Be clearly based on the journal content
+- Help the user write about real experiences or insights from their day
+- Be appropriate for a developer audience (e.g., bootcamp students, engineers learning AI)
+- Encourage reflection, storytelling, or teaching
 
-If the entry doesn't naturally support more than 1–2 prompts, that's fine—quality over quantity. Do not invent topics that aren't clearly present.
+Keep each idea short and direct—these are writing *prompts*, not finished titles or clickbait headlines. Use natural developer tone.
 
-Return only the prompt ideas. Do not summarize or rewrite the journal entry.
-
-### Format:
-1. [prompt idea]
-2. [prompt idea] (if applicable)
-3. [prompt idea] (if applicable)
+Avoid vague or inspirational phrasing. Do not include summaries or explanations—only return the prompt list.
 
 ### Journal Entry:
 ${entryText}
