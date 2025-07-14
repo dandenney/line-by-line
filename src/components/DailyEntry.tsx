@@ -189,7 +189,7 @@ export default function DailyEntry({ onSave, onBack, existingEntry }: DailyEntry
     } finally {
       setIsLoading(false);
     }
-  }, [answers, questions, onSave, user, session]);
+  }, [answers, questions, onSave, user, session, existingEntry]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 's' && (e.metaKey || e.ctrlKey)) {

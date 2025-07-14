@@ -51,7 +51,7 @@ export default function Auth() {
           setUser(session.user)
         }
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)
