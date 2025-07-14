@@ -17,10 +17,7 @@ export default function Auth() {
 
   // Redirect if user is already authenticated
   useEffect(() => {
-    console.log('Auth useEffect - user state:', user)
-    console.log('Auth useEffect - loading state:', loading)
     if (user) {
-      console.log('Auth useEffect - redirecting to dashboard')
       router.push('/dashboard')
     }
   }, [user, router])
@@ -29,42 +26,32 @@ export default function Auth() {
     e.preventDefault()
     setLoading(true)
     setError(null)
-    console.log('Auth handleSubmit - starting signup')
 
     try {
       const { error } = isLogin 
         ? await signIn(email, password)
         : await signUp(email, password)
 
-      console.log('Auth handleSubmit - signup result:', { error })
-
       if (error) {
         setError(error.message)
       } else {
-        console.log('Auth handleSubmit - signup successful, setting justAuthenticated')
         // Set the flag to indicate this is a new authentication
         setJustAuthenticated(true)
         // Success - user will be redirected by useEffect
         
         // Sign in the user immediately after signup
-        console.log('Auth handleSubmit - signing in user after signup')
         const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
         
-        console.log('Auth handleSubmit - sign in result:', { session, signInError })
-        
         if (signInError) {
-          console.error('Auth handleSubmit - sign in error:', signInError)
           setError('Account created but failed to sign in. Please try signing in manually.')
         } else if (session?.user) {
-          console.log('Auth handleSubmit - manually setting user state')
           setUser(session.user)
         }
       }
-    } catch (err) {
-      console.error('Auth handleSubmit - unexpected error:', err)
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setLoading(false)

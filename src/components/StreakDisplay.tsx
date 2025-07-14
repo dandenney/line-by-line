@@ -36,7 +36,13 @@ export default function StreakDisplay({
     // Create entries map for quick lookup
     const entriesMap = new Map();
     entries.forEach(entry => {
-      const entryDate = new Date(entry.date);
+      // Handle both Date objects and date strings consistently
+      let entryDate: Date;
+      if (entry.date instanceof Date) {
+        entryDate = new Date(entry.date.getTime()); // Clone the date to avoid timezone issues
+      } else {
+        entryDate = new Date(entry.date);
+      }
       entryDate.setHours(0, 0, 0, 0);
       entriesMap.set(entryDate.getTime(), entry);
     });
@@ -50,6 +56,7 @@ export default function StreakDisplay({
       const isStreakDay = streakDays.includes(dayOfWeek);
       
       const entry = entriesMap.get(slotDate.getTime());
+      
       let status: DaySlot['status'];
       
       if (entry) {
@@ -137,7 +144,7 @@ export default function StreakDisplay({
             </>
           );
 
-          // If completed, wrap in Link
+          // If completed, wrap in Link - regardless of whether it's a streak day
           return slot.entry ? (
             <Link
               key={slot.date.getTime()}

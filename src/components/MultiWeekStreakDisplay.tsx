@@ -23,12 +23,16 @@ export default function MultiWeekStreakDisplay({ entries, streakDays, onStartEnt
     const weekStart = new Date(today);
     const daysToSubtract = today.getDay() + (weekOffset * 7);
     weekStart.setDate(today.getDate() - daysToSubtract);
+    weekStart.setHours(0, 0, 0, 0); // Normalize to midnight
     
     // Filter entries for this specific week
     const weekEntries = entries.filter(entry => {
       const entryDate = new Date(entry.date);
+      entryDate.setHours(0, 0, 0, 0); // Normalize to midnight
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999); // End of day
+      
       return entryDate >= weekStart && entryDate <= weekEnd;
     });
     
