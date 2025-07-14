@@ -66,7 +66,8 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
         const frontendEntries: FrontendEntry[] = supabaseEntries.map((entry: { id: string; entry_date: string; content: string }) => {
           // Fix timezone issue: create date as local date, not UTC
           const [year, month, day] = entry.entry_date.split('-').map(Number);
-          const localDate = new Date(year, month - 1, day); // month is 0-indexed
+          // Create date in local timezone by using local date constructor
+          const localDate = new Date(year, month - 1, day);
           
           return {
             id: entry.id,
