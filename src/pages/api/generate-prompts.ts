@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-    // Get authenticated user
+  // Get authenticated user
   const user = await getAuthenticatedUser(req);
   if (!user) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -59,6 +59,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!entryId) {
       return res.status(400).json({ error: 'Entry ID is required' });
+    }
+
+    // Check rate limit before processing
+    const { data: rateLimitAllowed, error: rateLimitError } = await supabase
+      .rpc('check_rate_limit', {
+        user_uuid: user.id,
+        endpoint_name: 'generate-prompts',
+        max_requests: 3
+      });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+      return res.status(500).json({ error: 'Rate limit check failed' });
+    }
+
+    if (!rateLimitAllowed) {
+      // Get current rate limit status for user-friendly message
+      const { data: rateLimitStatus, error: statusError } = await supabase
+        .rpc('get_rate_limit_status', {
+          user_uuid: user.id,
+          endpoint_name: 'generate-prompts',
+          max_requests: 3
+        });
+
+      if (statusError) {
+        console.error('Rate limit status error:', statusError);
+      }
+
+      return res.status(429).json({ 
+        error: 'You have reached your daily limit of 3 question requests. Please try again tomorrow.',
+        rateLimitInfo: rateLimitStatus || null
+      });
     }
 
     // Get the entry content

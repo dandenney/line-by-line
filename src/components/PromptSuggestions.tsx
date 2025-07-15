@@ -38,6 +38,14 @@ export default function PromptSuggestions({ entryId, entryContent, sourceEntryDa
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Handle rate limit error specifically
+        if (response.status === 429) {
+          const rateLimitMessage = errorData.error || 'You have reached your daily limit of 3 question requests.';
+          setError(rateLimitMessage);
+          return;
+        }
+        
         throw new Error(errorData.error || 'Failed to generate prompts');
       }
 
@@ -130,9 +138,28 @@ export default function PromptSuggestions({ entryId, entryContent, sourceEntryDa
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+          className={`mb-4 p-3 border rounded-lg text-sm ${
+            error.includes('daily limit') 
+              ? 'bg-amber-50 border-amber-200 text-amber-700' 
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
         >
-          {error}
+          <div className="flex items-start gap-2">
+            {error.includes('daily limit') && (
+              <span className="text-amber-600">⏰</span>
+            )}
+            <div>
+              <p className="font-medium mb-1">
+                {error.includes('daily limit') ? 'Daily Limit Reached' : 'Error'}
+              </p>
+              <p className="text-sm opacity-90">{error}</p>
+              {error.includes('daily limit') && (
+                <p className="text-xs mt-2 opacity-75">
+                  You can request new writing ideas again tomorrow.
+                </p>
+              )}
+            </div>
+          </div>
         </motion.div>
       )}
 

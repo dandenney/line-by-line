@@ -34,6 +34,11 @@ export interface Database {
         Insert: WritingPromptInsert
         Update: WritingPromptUpdate
       }
+      api_rate_limits: {
+        Row: ApiRateLimit
+        Insert: ApiRateLimitInsert
+        Update: ApiRateLimitUpdate
+      }
     }
     Functions: {
       calculate_user_streak: {
@@ -54,6 +59,19 @@ export interface Database {
       get_user_questions: {
         Args: { user_uuid: string }
         Returns: string[]
+      }
+      check_rate_limit: {
+        Args: { user_uuid: string; endpoint_name: string; max_requests?: number }
+        Returns: boolean
+      }
+      get_rate_limit_status: {
+        Args: { user_uuid: string; endpoint_name: string; max_requests?: number }
+        Returns: {
+          current_count: number
+          max_requests: number
+          remaining: number
+          is_allowed: boolean
+        }
       }
     }
   }
@@ -238,6 +256,37 @@ export interface WritingPromptUpdate {
   source_entry_date?: string
   is_used?: boolean
   status?: 'active' | 'written' | 'archived'
+  created_at?: string
+  updated_at?: string
+}
+
+// API Rate Limit types
+export interface ApiRateLimit {
+  id: string
+  user_id: string
+  endpoint: string
+  request_date: string
+  request_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface ApiRateLimitInsert {
+  id?: string
+  user_id: string
+  endpoint: string
+  request_date: string
+  request_count?: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface ApiRateLimitUpdate {
+  id?: string
+  user_id?: string
+  endpoint?: string
+  request_date?: string
+  request_count?: number
   created_at?: string
   updated_at?: string
 }
