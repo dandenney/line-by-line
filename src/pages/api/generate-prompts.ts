@@ -111,8 +111,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Check if OpenAI API key is configured
     const openaiApiKey = process.env.OPENAI_API_KEY;
-    console.log('OpenAI API Key exists:', !!openaiApiKey);
-    console.log('OpenAI API Key length:', openaiApiKey?.length);
     if (!openaiApiKey) {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
