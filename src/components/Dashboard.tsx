@@ -6,6 +6,7 @@ import { supabaseHelpers } from '@/lib/supabase-client';
 import { FrontendEntry } from '@/types/database';
 import MigrationBanner from './MigrationBanner';
 import { supabase } from '@/lib/supabase-client';
+import Settings from './Settings';
 
 interface DashboardProps {
   onStartEntry: () => void;
@@ -16,27 +17,19 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
   const [streak, setStreak] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const { signOut, user } = useAuth();
 
   useEffect(() => {
     const loadData = async () => {
-      console.log('Dashboard loadData called');
-      console.log('User state:', user);
-      console.log('User ID:', user?.id);
-      console.log('User email:', user?.email);
-      
       if (!user) {
-        console.log('No user found, skipping data load');
         setIsLoading(false);
         return;
       }
-      
-      console.log('User found, starting data load...');
       setIsLoading(true);
       setError(null);
 
       try {
-        console.log('Attempting to load entries for user:', user.id);
         
         // Test if we can access the entries table
         const { error: testError } = await supabase
@@ -56,12 +49,9 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
           return;
         }
         
-        console.log('Database connection test successful');
         
         // Load entries from Supabase
         const supabaseEntries = await supabaseHelpers.entries.getAll(user.id);
-        console.log('Successfully loaded entries:', supabaseEntries);
-        
         // Convert to frontend format for backward compatibility
         const frontendEntries: FrontendEntry[] = supabaseEntries.map((entry: { id: string; entry_date: string; content: string }) => {
           // Fix timezone issue: create date as local date, not UTC
@@ -76,19 +66,11 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
           };
         });
         
-        console.log('Converted to frontend entries:', frontendEntries);
         setEntries(frontendEntries);
         
         // Calculate streak using database function
         try {
-          console.log('Calculating streak using database function...');
-          console.log('🔍 Database streak calculation debug:');
-          console.log('📅 Current date (UTC):', new Date().toISOString().split('T')[0]);
-          console.log('📅 Current date (local):', new Date().toLocaleDateString('en-CA'));
-          console.log('📝 Entry dates in database:', supabaseEntries.map(e => e.entry_date));
-          
           const currentStreak = await supabaseHelpers.functions.getCurrentStreak(user.id);
-          console.log('Successfully loaded streak from database:', currentStreak);
           setStreak(currentStreak);
         } catch (streakError) {
           console.error('Database streak calculation failed, using client-side fallback:', streakError);
@@ -100,26 +82,16 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
-            console.log('🔍 Client-side streak calculation debug:');
-            console.log('📅 Today:', today.toDateString(), 'Day of week:', today.getDay());
-            console.log('📝 All entries:', entries.map(e => ({
-              date: new Date(e.date).toDateString(),
-              dayOfWeek: new Date(e.date).getDay(),
-              text: e.text.substring(0, 50) + '...'
-            })));
-            
             let streak = 0;
             let checkDate = new Date(today);
             
             // Default to weekdays (Monday = 1, Tuesday = 2, etc.)
             const streakDays = [1, 2, 3, 4, 5]; // Monday to Friday
-            console.log('🎯 Streak days:', streakDays);
             
             while (true) {
               const dayOfWeek = checkDate.getDay();
               const isStreakDay = streakDays.includes(dayOfWeek);
               
-              console.log(`🔍 Checking date: ${checkDate.toDateString()}, Day of week: ${dayOfWeek}, Is streak day: ${isStreakDay}`);
               
               if (isStreakDay) {
                 // Check if there's an entry for this date
@@ -127,33 +99,25 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
                   const entryDate = new Date(entry.date);
                   entryDate.setHours(0, 0, 0, 0);
                   const dateMatch = entryDate.getTime() === checkDate.getTime();
-                  console.log(`  📝 Comparing with entry: ${entryDate.toDateString()}, Match: ${dateMatch}`);
                   return dateMatch;
                 });
                 
-                console.log(`  ✅ Has entry for ${checkDate.toDateString()}: ${hasEntry}`);
-                
                 if (hasEntry) {
                   streak++;
-                  console.log(`  🔥 Streak increased to: ${streak}`);
                   checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
                 } else {
-                  console.log(`  ❌ No entry found, breaking streak at ${checkDate.toDateString()}`);
                   break;
                 }
               } else {
-                console.log(`  ⏭️  Not a streak day, skipping ${checkDate.toDateString()}`);
                 // Not a streak day, move to previous day
                 checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
               }
             }
             
-            console.log(`🎉 Final streak count: ${streak}`);
             return streak;
           };
           
           const clientSideStreak = calculateClientSideStreak(frontendEntries);
-          console.log('Client-side streak calculation result:', clientSideStreak);
           setStreak(clientSideStreak);
         }
         
@@ -171,7 +135,6 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
         setEntries([]);
         setStreak(0);
       } finally {
-        console.log('Data loading completed, setting isLoading to false');
         setIsLoading(false);
       }
     };
@@ -180,10 +143,8 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
   }, [user]);
 
   const handleSignOut = useCallback(async () => {
-    console.log('Sign out clicked');
     try {
       await signOut();
-      console.log('Sign out successful');
     } catch (error) {
       console.error('Sign out error:', error);
     }
@@ -237,12 +198,24 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
               <div className="text-sm text-gray-600">
                 Welcome, {user?.email}
               </div>
-              <button
-                onClick={handleSignOut}
-                className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                Sign Out
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowSettings(true)}
+                  className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-all"
+                  title="Settings"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
             </div>
             
             <div className="text-center">
@@ -294,6 +267,11 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
           </motion.div>
         </div>
       </section>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <Settings onClose={() => setShowSettings(false)} />
+      )}
     </motion.div>
   );
 } 

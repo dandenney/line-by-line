@@ -33,16 +33,53 @@ export default function DailyEntry({ onSave, onBack, existingEntry }: DailyEntry
       if (!user) return;
       
       try {
-        // For now, use default questions
-        // TODO: Load from user settings or question templates
+        // Get user's active template from settings via API
+        let activeTemplateId = '00000000-0000-0000-0000-000000000001' // Default to learning
+
+        const { data: session } = await supabase.auth.getSession()
+        if (session?.session?.access_token) {
+          try {
+            const response = await fetch('/api/user-settings', {
+              headers: {
+                'Authorization': `Bearer ${session.session.access_token}`
+              }
+            })
+            
+            if (response.ok) {
+              const result = await response.json()
+              activeTemplateId = result.data?.active_template_id || activeTemplateId
+            }
+          } catch (apiError) {
+            console.error('API error, using default template:', apiError)
+          }
+        }
+        
+        // Map of system template questions
+        const systemTemplateQuestions = {
+          '00000000-0000-0000-0000-000000000001': [
+            "What did you learn today?",
+            "What was most confusing or challenging today?",
+            "What did you learn about how you learn?"
+          ],
+          '00000000-0000-0000-0000-000000000002': [
+            "What slowed you down today, and how might someone else avoid it?",
+            "Did something about your tools, stack, or workflow spark a rant or love letter?",
+            "If today's lesson were a tweet-sized note to your past self, what would it say?"
+          ]
+        }
+        
+        // Load questions based on active template
+        const questions = systemTemplateQuestions[activeTemplateId] || systemTemplateQuestions['00000000-0000-0000-0000-000000000001']
+        setQuestions(questions)
+        
+      } catch (error) {
+        console.error('Error loading questions:', error);
+        // Fallback to default questions
         setQuestions([
           "What did you learn today?",
           "What was most confusing or challenging today?",
           "What did you learn about how you learn?"
         ]);
-      } catch (error) {
-        console.error('Error loading questions:', error);
-        // Fallback to default questions
       }
     };
 
@@ -83,10 +120,6 @@ export default function DailyEntry({ onSave, onBack, existingEntry }: DailyEntry
   };
 
   const handleSave = useCallback(async () => {
-    console.log('handleSave called');
-    console.log('User:', user);
-    console.log('Session:', session);
-    console.log('Session user:', session?.user);
     
     if (!user) {
       console.error('No user found');
@@ -114,21 +147,14 @@ export default function DailyEntry({ onSave, onBack, existingEntry }: DailyEntry
     setError(null);
     
     try {
-      console.log('Saving entry for user:', user.id);
-      console.log('Session user ID:', session.user.id);
-      console.log('Entry content:', combinedText);
-      
       // Get current date in user's local timezone
       const localDate = getLocalDateString();
-      console.log('Local date:', localDate);
-      console.log('Current time:', new Date().toLocaleString());
       
       let data;
       let error;
       
       if (existingEntry) {
         // Update existing entry
-        console.log('Updating existing entry:', existingEntry.id);
         const result = await supabase
           .from('entries')
           .update({
@@ -142,7 +168,6 @@ export default function DailyEntry({ onSave, onBack, existingEntry }: DailyEntry
         error = result.error;
       } else {
         // Create new entry
-        console.log('Creating new entry');
         const result = await supabase
           .from('entries')
           .insert({
@@ -173,7 +198,6 @@ export default function DailyEntry({ onSave, onBack, existingEntry }: DailyEntry
         throw new Error(error.message || 'Failed to save entry');
       }
 
-      console.log('Successfully saved entry:', data);
       
       // Convert to frontend format for backward compatibility
       const frontendEntry: FrontendEntry = {

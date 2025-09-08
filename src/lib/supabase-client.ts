@@ -24,8 +24,6 @@ export const supabaseHelpers = {
     // Get all entries for a user
     async getAll(userId: string) {
       try {
-        console.log('Fetching entries for user:', userId);
-        
         // Use direct Supabase query
         const { data, error } = await supabase
           .from('entries')
@@ -38,7 +36,6 @@ export const supabaseHelpers = {
           throw error;
         }
         
-        console.log('Successfully fetched entries:', data);
         return data || [];
         
       } catch (error) {
@@ -338,6 +335,15 @@ export const supabaseHelpers = {
     async getUserQuestions(userId: string) {
       const { data, error } = await supabase
         .rpc('get_user_questions', { user_uuid: userId })
+      
+      if (error) throw error
+      return data
+    },
+
+    // Get available templates for a user (system templates + user templates)
+    async getAvailableTemplates(userId: string) {
+      const { data, error } = await supabase
+        .rpc('get_available_templates', { user_uuid: userId })
       
       if (error) throw error
       return data

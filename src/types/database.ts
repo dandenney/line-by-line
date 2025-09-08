@@ -57,8 +57,17 @@ export interface Database {
         }>
       }
       get_user_questions: {
-        Args: { user_uuid: string }
+        Args: { user_uuid?: string }
         Returns: string[]
+      }
+      get_available_templates: {
+        Args: { user_uuid?: string }
+        Returns: Array<{
+          id: string
+          name: string
+          questions: string[]
+          is_system: boolean
+        }>
       }
       check_rate_limit: {
         Args: { user_uuid: string; endpoint_name: string; max_requests?: number }
@@ -139,6 +148,7 @@ export interface UserSettings {
   user_id: string
   streak_days: number[] // 1=Monday, 2=Tuesday, etc.
   default_questions: string[]
+  active_template_id: string | null
   created_at: string
   updated_at: string
 }
@@ -148,6 +158,7 @@ export interface UserSettingsInsert {
   user_id: string
   streak_days?: number[]
   default_questions?: string[]
+  active_template_id?: string | null
   created_at?: string
   updated_at?: string
 }
@@ -157,6 +168,7 @@ export interface UserSettingsUpdate {
   user_id?: string
   streak_days?: number[]
   default_questions?: string[]
+  active_template_id?: string | null
   created_at?: string
   updated_at?: string
 }

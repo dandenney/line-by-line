@@ -38,7 +38,7 @@ async function testRateLimiting() {
         user_uuid: '00000000-0000-0000-0000-000000000000',
         endpoint_name: 'generate-prompts',
         max_requests: 3
-      });
+      } as any);
 
     if (error1) {
       console.error('❌ Error getting rate limit status:', error1);
