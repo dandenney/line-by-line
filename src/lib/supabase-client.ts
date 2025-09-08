@@ -338,6 +338,15 @@ export const supabaseHelpers = {
       
       if (error) throw error
       return data
+    },
+
+    // Get available templates for a user (system templates + user templates)
+    async getAvailableTemplates(userId: string) {
+      const { data, error } = await supabase
+        .rpc('get_available_templates', { user_uuid: userId })
+      
+      if (error) throw error
+      return data
     }
   }
 }

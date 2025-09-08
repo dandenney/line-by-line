@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'motion/react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase-client'
-import { QuestionTemplate } from '@/types/database'
 
 interface AvailableTemplate {
   id: string
@@ -27,21 +26,21 @@ export default function QuestionTemplateSelector({
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
 
-  useEffect(() => {
-    loadTemplates()
-  }, [user])
-
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     if (!user) return
 
     try {
       setIsLoading(true)
       setError(null)
 
-      // Built-in question templates
+      // For now, use hardcoded system templates since RLS prevents access to shared templates
+      // In the future, we should either:
+      // 1. Update RLS policies to allow access to system templates, or
+      // 2. Create an API endpoint that uses service role key to fetch system templates
+      
       const builtInTemplates: AvailableTemplate[] = [
         {
-          id: 'learning',
+          id: '00000000-0000-0000-0000-000000000001',
           name: 'Learning Reflection',
           questions: [
             "What did you learn today?",
@@ -50,7 +49,7 @@ export default function QuestionTemplateSelector({
           ]
         },
         {
-          id: 'standup',
+          id: '00000000-0000-0000-0000-000000000002',
           name: 'Daily Standup',
           questions: [
             "What slowed you down today, and how might someone else avoid it?",
@@ -58,14 +57,45 @@ export default function QuestionTemplateSelector({
             "If today's lesson were a tweet-sized note to your past self, what would it say?"
           ]
         }
-      ];
+      ]
+      
+      // TODO: Also load user's custom templates and merge them
+      // const { data: userTemplates } = await supabaseHelpers.questionTemplates.getAll(user.id)
+      // if (userTemplates) {
+      //   builtInTemplates.push(...userTemplates.map(template => ({
+      //     id: template.id,
+      //     name: template.name,
+      //     questions: template.questions
+      //   })))
+      // }
 
       setTemplates(builtInTemplates)
 
-      // Get current selection from localStorage (user-specific)
-      const storageKey = `questionTemplate_${user.id}`;
-      const currentSelection = localStorage.getItem(storageKey) || 'learning';
-      setSelectedTemplate(currentSelection)
+      // Get current selection from user settings via API
+      try {
+        const { data: session } = await supabase.auth.getSession()
+        if (session?.session?.access_token) {
+          const response = await fetch('/api/user-settings', {
+            headers: {
+              'Authorization': `Bearer ${session.session.access_token}`
+            }
+          })
+          
+          if (response.ok) {
+            const result = await response.json()
+            const currentSelection = result.data?.active_template_id || '00000000-0000-0000-0000-000000000001'
+            setSelectedTemplate(currentSelection)
+          } else {
+            // Fallback to default
+            setSelectedTemplate('00000000-0000-0000-0000-000000000001')
+          }
+        } else {
+          setSelectedTemplate('00000000-0000-0000-0000-000000000001')
+        }
+      } catch (error) {
+        console.error('Error loading user settings:', error)
+        setSelectedTemplate('00000000-0000-0000-0000-000000000001')
+      }
 
     } catch (error) {
       console.error('Error loading templates:', error)
@@ -73,7 +103,11 @@ export default function QuestionTemplateSelector({
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    loadTemplates()
+  }, [loadTemplates])
 
   const handleTemplateSelect = async (templateId: string) => {
     if (!user) return
@@ -81,9 +115,27 @@ export default function QuestionTemplateSelector({
     try {
       setSelectedTemplate(templateId)
 
-      // Store selection in localStorage (user-specific)
-      const storageKey = `questionTemplate_${user.id}`;
-      localStorage.setItem(storageKey, templateId);
+      // Save selection via API endpoint (bypasses RLS)
+      const { data: session } = await supabase.auth.getSession()
+      if (!session?.session?.access_token) {
+        throw new Error('No authentication session')
+      }
+
+      const response = await fetch('/api/user-settings', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          active_template_id: templateId
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save template selection')
+      }
 
       // Clear any error and notify parent component
       setError(null)
@@ -91,6 +143,8 @@ export default function QuestionTemplateSelector({
     } catch (error) {
       console.error('Error updating template selection:', error)
       setError('Failed to save template selection')
+      // Revert the UI state if database save failed
+      setSelectedTemplate(selectedTemplate)
     }
   }
 

@@ -33,23 +33,44 @@ export default function DailyEntry({ onSave, onBack, existingEntry }: DailyEntry
       if (!user) return;
       
       try {
-        const questionSets = {
-          'learning': [
+        // Get user's active template from settings via API
+        let activeTemplateId = '00000000-0000-0000-0000-000000000001' // Default to learning
+
+        const { data: session } = await supabase.auth.getSession()
+        if (session?.session?.access_token) {
+          try {
+            const response = await fetch('/api/user-settings', {
+              headers: {
+                'Authorization': `Bearer ${session.session.access_token}`
+              }
+            })
+            
+            if (response.ok) {
+              const result = await response.json()
+              activeTemplateId = result.data?.active_template_id || activeTemplateId
+            }
+          } catch (apiError) {
+            console.error('API error, using default template:', apiError)
+          }
+        }
+        
+        // Map of system template questions
+        const systemTemplateQuestions = {
+          '00000000-0000-0000-0000-000000000001': [
             "What did you learn today?",
             "What was most confusing or challenging today?",
             "What did you learn about how you learn?"
           ],
-          'standup': [
+          '00000000-0000-0000-0000-000000000002': [
             "What slowed you down today, and how might someone else avoid it?",
             "Did something about your tools, stack, or workflow spark a rant or love letter?",
             "If today's lesson were a tweet-sized note to your past self, what would it say?"
           ]
-        };
+        }
         
-        // Get user's selected question set from localStorage
-        const storageKey = `questionTemplate_${user.id}`;
-        const selectedSet = localStorage.getItem(storageKey) || 'learning';
-        setQuestions(questionSets[selectedSet] || questionSets.learning);
+        // Load questions based on active template
+        const questions = systemTemplateQuestions[activeTemplateId] || systemTemplateQuestions['00000000-0000-0000-0000-000000000001']
+        setQuestions(questions)
         
       } catch (error) {
         console.error('Error loading questions:', error);

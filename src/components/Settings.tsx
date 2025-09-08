@@ -11,7 +11,7 @@ interface SettingsProps {
 export default function Settings({ onClose }: SettingsProps) {
   const [hasChanges, setHasChanges] = useState(false)
 
-  const handleTemplateChange = (templateId: string) => {
+  const handleTemplateChange = () => {
     setHasChanges(true)
     // Could add more logic here if needed
   }
@@ -46,7 +46,7 @@ export default function Settings({ onClose }: SettingsProps) {
                 Daily Questions
               </h3>
               <p className="text-gray-600 text-sm">
-                Choose the set of questions you'd like to answer each day. You can switch between different question sets anytime.
+                Choose the set of questions you&apos;d like to answer each day. You can switch between different question sets anytime.
               </p>
             </div>
             
