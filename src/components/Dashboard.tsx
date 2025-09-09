@@ -265,6 +265,70 @@ export default function Dashboard({ onStartEntry }: DashboardProps) {
               onStartEntry={onStartEntry}
             />
           </motion.div>
+
+          {/* Past Entries List */}
+          {entries.length > 0 && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{
+                duration: 0.5,
+                delay: 0.3,
+                ease: [0.4, 0.0, 0.2, 1],
+              }}
+              className="mb-8"
+            >
+              <div className="flex gap-4 items-center mb-6">
+                <h2 className="bg-[#F5F3EE] text-xl font-medium text-gray-700 font-serif pr-4">
+                  Recent Entries
+                </h2>
+                <div className="bg-[#e4ddd5] h-0.5 grow"></div>
+              </div>
+              
+              <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4">
+                {entries
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                  .slice(0, 10) // Show last 10 entries
+                  .map((entry) => (
+                    <motion.div
+                      key={entry.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.3,
+                        ease: [0.4, 0.0, 0.2, 1],
+                      }}
+                      className="bg-[#fcf8f7] border border-[#cfc3b7] rounded-lg p-4 hover:bg-[#f8f4f2] transition-colors cursor-pointer"
+                      onClick={() => window.location.href = `/entry/${entry.id}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-gray-600 font-medium">
+                          {new Date(entry.date).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </p>
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-800 line-clamp-3 leading-relaxed">
+                        {entry.text}
+                      </p>
+                    </motion.div>
+                  ))}
+              </div>
+              
+              {entries.length > 10 && (
+                <div className="text-center mt-6">
+                  <p className="text-sm text-gray-500">
+                    Showing 10 of {entries.length} entries
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
       </section>
 
