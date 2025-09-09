@@ -159,7 +159,7 @@ async function testCompleteMigration() {
         console.log('✅ Template data retrieved successfully!')
         console.log('📄 Template name:', templateData.name)
         console.log('❓ Questions:')
-        templateData.questions?.forEach((question, index) => {
+        templateData.questions?.forEach((question: string, index) => {
           console.log(`    ${index + 1}. ${question}`)
         })
         

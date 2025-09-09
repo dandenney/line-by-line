@@ -151,7 +151,7 @@ async function debugTemplateSave() {
         ]
       }
       
-      const activeTemplateId = settingsForQuestions.active_template_id || '00000000-0000-0000-0000-000000000001'
+      const activeTemplateId = (settingsForQuestions.active_template_id || '00000000-0000-0000-0000-000000000001') as keyof typeof systemTemplateQuestions
       const questions = systemTemplateQuestions[activeTemplateId] || systemTemplateQuestions['00000000-0000-0000-0000-000000000001']
       
       console.log('📝 Questions that would be loaded:')
