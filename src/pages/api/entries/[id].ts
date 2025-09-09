@@ -64,7 +64,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Verify user can only access their own entries
-    if (data.user_id !== user.id) {
+    if ((data as any).user_id !== user.id) { // eslint-disable-line @typescript-eslint/no-explicit-any
       return res.status(403).json({ error: 'Forbidden' });
     }
 

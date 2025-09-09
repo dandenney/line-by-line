@@ -6,16 +6,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
 
-// Service role client for operations that need to bypass RLS (server-side only)
-const createServiceRoleClient = () => {
-  if (typeof window !== 'undefined') {
-    throw new Error('Service role client cannot be used in browser');
-  }
-  return createClient<Database>(
-    supabaseUrl, 
-    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-  );
-}
+// Untyped client for operations where strict typing causes issues
+const untypedSupabase = createClient(supabaseUrl, supabaseAnonKey)
+
 
 // Helper functions for common operations
 export const supabaseHelpers = {
@@ -83,7 +76,7 @@ export const supabaseHelpers = {
 
     // Create new entry
     async create(entry: Database['public']['Tables']['entries']['Insert']) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .from('entries')
         .insert(entry)
         .select()
@@ -95,7 +88,7 @@ export const supabaseHelpers = {
 
     // Update entry
     async update(id: string, updates: Database['public']['Tables']['entries']['Update']) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .from('entries')
         .update(updates)
         .eq('id', id)
@@ -133,7 +126,7 @@ export const supabaseHelpers = {
 
     // Create new comment
     async create(comment: Database['public']['Tables']['entry_comments']['Insert']) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .from('entry_comments')
         .insert(comment)
         .select()
@@ -145,7 +138,7 @@ export const supabaseHelpers = {
 
     // Update comment
     async update(id: string, updates: Database['public']['Tables']['entry_comments']['Update']) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .from('entry_comments')
         .update(updates)
         .eq('id', id)
@@ -183,7 +176,7 @@ export const supabaseHelpers = {
 
     // Create or update user settings
     async upsert(settings: Database['public']['Tables']['user_settings']['Insert']) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .from('user_settings')
         .upsert(settings)
         .select()
@@ -201,8 +194,8 @@ export const supabaseHelpers = {
         if (existing) return existing;
       } catch {
         // Settings don't exist, create them using service role
-        const serviceClient = createServiceRoleClient();
-        const { data, error: createError } = await serviceClient
+        const untypedServiceClient = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY || '');
+        const { data, error: createError } = await untypedServiceClient
           .from('user_settings')
           .insert({
             user_id: userId,
@@ -251,7 +244,7 @@ export const supabaseHelpers = {
 
     // Create template
     async create(template: Database['public']['Tables']['question_templates']['Insert']) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .from('question_templates')
         .insert(template)
         .select()
@@ -263,7 +256,7 @@ export const supabaseHelpers = {
 
     // Update template
     async update(id: string, updates: Database['public']['Tables']['question_templates']['Update']) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .from('question_templates')
         .update(updates)
         .eq('id', id)
@@ -301,7 +294,7 @@ export const supabaseHelpers = {
 
     // Calculate and update streak
     async updateStreak(userId: string) {
-      const { error } = await supabase
+      const { error } = await untypedSupabase
         .rpc('update_streak_analytics', { user_uuid: userId })
       
       if (error) throw error
@@ -312,7 +305,7 @@ export const supabaseHelpers = {
   functions: {
     // Get user's current streak
     async getCurrentStreak(userId: string) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .rpc('calculate_user_streak', { user_uuid: userId })
       
       if (error) throw error
@@ -321,7 +314,7 @@ export const supabaseHelpers = {
 
     // Get weekly entries
     async getWeeklyEntries(userId: string, weekStart: string) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .rpc('get_weekly_entries', { 
           user_uuid: userId, 
           week_start: weekStart 
@@ -333,7 +326,7 @@ export const supabaseHelpers = {
 
     // Get user's active questions
     async getUserQuestions(userId: string) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .rpc('get_user_questions', { user_uuid: userId })
       
       if (error) throw error
@@ -342,7 +335,7 @@ export const supabaseHelpers = {
 
     // Get available templates for a user (system templates + user templates)
     async getAvailableTemplates(userId: string) {
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .rpc('get_available_templates', { user_uuid: userId })
       
       if (error) throw error

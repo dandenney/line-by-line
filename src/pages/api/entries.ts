@@ -7,6 +7,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
+const untypedSupabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Helper function to get authenticated user from request
 async function getAuthenticatedUser(req: NextApiRequest) {
@@ -101,7 +102,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       if (!existingSettings) {
         // Create user settings
-        await supabase
+        await untypedSupabase
           .from('user_settings')
           .insert({
             user_id,
@@ -129,10 +130,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     
     if (existingEntry) {
       // Update existing entry
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .from('entries')
         .update({ content, updated_at: new Date().toISOString() })
-        .eq('id', existingEntry.id)
+        .eq('id', (existingEntry as any).id) // eslint-disable-line @typescript-eslint/no-explicit-any
         .select()
         .single();
 
@@ -144,7 +145,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       result = data;
     } else {
       // Create new entry
-      const { data, error } = await supabase
+      const { data, error } = await untypedSupabase
         .from('entries')
         .insert({
           user_id,

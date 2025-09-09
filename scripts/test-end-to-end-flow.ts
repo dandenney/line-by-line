@@ -134,7 +134,7 @@ async function testEndToEndFlow() {
       ]
     }
     
-    const questions = systemTemplateQuestions[activeTemplateId] || systemTemplateQuestions['00000000-0000-0000-0000-000000000001']
+    const questions = systemTemplateQuestions[activeTemplateId as keyof typeof systemTemplateQuestions] || systemTemplateQuestions['00000000-0000-0000-0000-000000000001']
     
     console.log('✅ Questions loaded successfully:')
     questions.forEach((question, index) => {
