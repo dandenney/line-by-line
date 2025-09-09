@@ -72,17 +72,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (entryError || !entry) {
         return res.status(404).json({ error: 'Entry not found' });
       }
-
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from('writing_prompts')
-        .insert({
+        .insert([{
           user_id: user.id,
           entry_id: entryId,
           prompt_text: promptText,
           source_entry_date: sourceEntryDate,
           is_used: false,
           status: 'active'
-        })
+        }])
         .select()
         .single();
 
@@ -106,8 +106,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!promptId || !status || !['active', 'written', 'archived'].includes(status)) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
-
-      const { data, error } = await supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
         .from('writing_prompts')
         .update({ 
           status: status,

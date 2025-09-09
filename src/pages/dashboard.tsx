@@ -39,7 +39,7 @@ export default function DashboardPage() {
     try {
       // Check if today's entry already exists
       const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format
-      const existingEntry = await supabaseHelpers.entries.getByDate(user.id, today);
+      const existingEntry = await supabaseHelpers.entries.getByDate(user.id, today) as { id: string; content: string; entry_date: string } | null;
       
       if (existingEntry) {
         // Convert to frontend format
