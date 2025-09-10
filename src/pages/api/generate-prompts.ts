@@ -72,7 +72,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Check rate limit before processing
     const { data: rateLimitAllowed, error: rateLimitError } = await supabase
-      .rpc('check_rate_limit') as { data: boolean | null; error: PostgrestError | null };
+      .rpc('check_rate_limit', {
+        user_uuid: user.id,
+        endpoint_name: 'generate-prompts',
+        max_requests: 3
+      }) as { data: boolean | null; error: PostgrestError | null };
 
     if (rateLimitError) {
       console.error('Rate limit check error:', rateLimitError);
@@ -83,7 +87,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Get current rate limit status for user-friendly message
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: rateLimitStatus, error: statusError } = await supabase
-        .rpc('get_rate_limit_status') as { data: RateLimitStatus | null; error: PostgrestError | null };
+        .rpc('get_rate_limit_status', {
+          user_uuid: user.id,
+          endpoint_name: 'generate-prompts',
+          max_requests: 3
+        }) as { data: RateLimitStatus | null; error: PostgrestError | null };
 
       if (statusError) {
         console.error('Rate limit status error:', statusError);
