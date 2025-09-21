@@ -1,19 +1,49 @@
 import { useState, useEffect } from 'react'
 import { WritingPrompt, ChatMessage } from '@/lib/openai'
-import { Check, Archive, Edit3 } from 'lucide-react'
+import { dbOperations } from '@/lib/supabase'
+import { Check, Archive, ArrowRight } from 'lucide-react'
 
 interface PromptsDisplayProps {
   messages: ChatMessage[]
-  onStartOver: () => void
+  onComplete: () => void
 }
 
-export default function PromptsDisplay({ messages, onStartOver }: PromptsDisplayProps) {
+export default function PromptsDisplay({ messages, onComplete }: PromptsDisplayProps) {
   const [prompts, setPrompts] = useState<WritingPrompt[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [reflectionSaved, setReflectionSaved] = useState(false)
 
   useEffect(() => {
     generatePrompts()
   }, [messages])
+
+  useEffect(() => {
+    // Save reflection entry when prompts are generated
+    if (prompts.length > 0 && !reflectionSaved) {
+      saveReflectionEntry()
+      setReflectionSaved(true)
+    }
+  }, [prompts, reflectionSaved])
+
+  const saveReflectionEntry = async () => {
+    try {
+      await dbOperations.createReflectionEntry({
+        initial_reflection: messages[0]?.content || '',
+        conversation_messages: messages,
+        prompts: prompts.map(p => ({
+          id: p.id,
+          content: p.content,
+          type: p.type,
+          saved: p.saved,
+          archived: p.archived,
+          created_at: p.created_at
+        }))
+      })
+      console.log('Reflection entry saved to database')
+    } catch (error) {
+      console.error('Error saving reflection entry:', error)
+    }
+  }
 
   const generatePrompts = async () => {
     setIsLoading(true)
@@ -54,7 +84,7 @@ export default function PromptsDisplay({ messages, onStartOver }: PromptsDisplay
             type: ['blog', 'social', 'internal'].includes(prompt.type) ? prompt.type : 'internal',
             saved: false,
             archived: false,
-            createdAt: new Date().toISOString()
+            created_at: new Date().toISOString()
           }))
           setPrompts(formattedPrompts)
         } catch (parseError) {
@@ -66,7 +96,7 @@ export default function PromptsDisplay({ messages, onStartOver }: PromptsDisplay
             type: 'internal',
             saved: false,
             archived: false,
-            createdAt: new Date().toISOString()
+            created_at: new Date().toISOString()
           }])
         }
       } else {
@@ -77,7 +107,7 @@ export default function PromptsDisplay({ messages, onStartOver }: PromptsDisplay
           type: 'internal',
           saved: false,
           archived: false,
-          createdAt: new Date().toISOString()
+          created_at: new Date().toISOString()
         }])
       }
     } catch (error) {
@@ -89,22 +119,30 @@ export default function PromptsDisplay({ messages, onStartOver }: PromptsDisplay
         type: 'internal',
         saved: false,
         archived: false,
-        createdAt: new Date().toISOString()
+        created_at: new Date().toISOString()
       }])
     }
     setIsLoading(false)
   }
 
-  const savePrompt = (promptId: string) => {
-    setPrompts(prev => prev.map(p =>
-      p.id === promptId ? { ...p, saved: true } : p
-    ))
-
+  const savePrompt = async (promptId: string) => {
     const prompt = prompts.find(p => p.id === promptId)
     if (prompt) {
-      const savedPrompts = JSON.parse(localStorage.getItem('savedPrompts') || '[]')
-      savedPrompts.push({ ...prompt, saved: true })
-      localStorage.setItem('savedPrompts', JSON.stringify(savedPrompts))
+      try {
+        await dbOperations.savePrompt({
+          content: prompt.content,
+          type: prompt.type,
+          saved: true,
+          archived: prompt.archived,
+          reflection_entry_id: null
+        })
+
+        setPrompts(prev => prev.map(p =>
+          p.id === promptId ? { ...p, saved: true } : p
+        ))
+      } catch (error) {
+        console.error('Error saving prompt:', error)
+      }
     }
   }
 
@@ -223,11 +261,17 @@ export default function PromptsDisplay({ messages, onStartOver }: PromptsDisplay
         </div>
 
         <div className="mt-12 text-center">
+          <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+            <p className="text-green-800 text-sm">
+              ✅ Reflection complete! Your thoughts and prompts have been saved.
+            </p>
+          </div>
           <button
-            onClick={onStartOver}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            onClick={onComplete}
+            className="flex items-center space-x-2 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors mx-auto"
           >
-            Start New Reflection
+            <span>Go to Dashboard</span>
+            <ArrowRight size={16} />
           </button>
         </div>
       </div>

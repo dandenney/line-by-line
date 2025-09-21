@@ -13,6 +13,7 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
   const [currentInput, setCurrentInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [conversationCount, setConversationCount] = useState(0)
+  const [showChoice, setShowChoice] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -66,7 +67,7 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
     setConversationCount(prev => prev + 1)
 
     if (conversationCount + 1 >= maxConversations) {
-      onComplete(newMessages)
+      setShowChoice(true)
       return
     }
 
@@ -87,7 +88,7 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
         setMessages(finalMessages)
 
         if (conversationCount + 1 >= maxConversations - 1) {
-          setTimeout(() => onComplete(finalMessages), 1000)
+          setTimeout(() => setShowChoice(true), 1000)
         }
       }
     } catch (error) {
@@ -101,6 +102,15 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
       e.preventDefault()
       handleUserResponse()
     }
+  }
+
+  const handleContinueConversation = () => {
+    setConversationCount(0)
+    setShowChoice(false)
+  }
+
+  const handleGetPrompts = () => {
+    onComplete(messages)
   }
 
   return (
@@ -139,25 +149,47 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
         </div>
 
         <div className="p-6 bg-white border-t border-gray-200">
-          <div className="flex space-x-3">
-            <input
-              ref={inputRef}
-              type="text"
-              value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your response..."
-              disabled={isLoading || conversationCount >= maxConversations}
-              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:opacity-50"
-            />
-            <button
-              onClick={handleUserResponse}
-              disabled={!currentInput.trim() || isLoading || conversationCount >= maxConversations}
-              className="px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Send
-            </button>
-          </div>
+          {showChoice ? (
+            <div className="text-center space-y-4">
+              <p className="text-gray-700 mb-6">
+                Would you like to continue discussing this or get writing prompts now?
+              </p>
+              <div className="flex space-x-4 justify-center">
+                <button
+                  onClick={handleContinueConversation}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Continue Discussion
+                </button>
+                <button
+                  onClick={handleGetPrompts}
+                  className="px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+                >
+                  Get Writing Prompts
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex space-x-3">
+              <input
+                ref={inputRef}
+                type="text"
+                value={currentInput}
+                onChange={(e) => setCurrentInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your response..."
+                disabled={isLoading || conversationCount >= maxConversations}
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:opacity-50"
+              />
+              <button
+                onClick={handleUserResponse}
+                disabled={!currentInput.trim() || isLoading || conversationCount >= maxConversations}
+                className="px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Send
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

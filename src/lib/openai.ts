@@ -8,16 +8,5 @@ export const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
-export interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-}
-
-export interface WritingPrompt {
-  id: string
-  content: string
-  type: 'blog' | 'social' | 'internal'
-  saved: boolean
-  archived: boolean
-  createdAt: string
-}
+// Re-export types from supabase for backwards compatibility
+export type { ChatMessage, WritingPrompt, ReflectionEntry } from './supabase'

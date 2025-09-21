@@ -42,10 +42,11 @@ Visit `http://localhost:3000` and start your reflection journey! 🎉
 
 ## 📝 How It Works
 
-1. **Reflect**: Answer the simple question "What stood out to you today?" in a clean, full-screen interface
-2. **Explore**: Engage in a brief AI-powered conversation (2-3 exchanges) to dig deeper into your thoughts
-3. **Create**: Receive 1-3 personalized writing prompts for blog posts, social media, or internal sharing
-4. **Save**: Keep your favorite prompts for later use
+1. **Dashboard**: Start at your personal dashboard showing past reflections and saved prompts
+2. **Reflect**: Answer the simple question "What stood out to you today?" in a clean, full-screen interface
+3. **Explore**: Engage in a brief AI-powered conversation (2-3 exchanges) to dig deeper into your thoughts
+4. **Create**: Receive 1-3 personalized writing prompts for blog posts, social media, or internal sharing
+5. **Save & Return**: Save your favorite prompts and return to the dashboard to see your growing collection
 
 ## 🛠️ Development
 
