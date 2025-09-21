@@ -1,17 +1,17 @@
 # Line-by-Line 📝
 
-A beautiful, minimalist daily journaling app that helps you reflect on your learning journey. Built with Next.js, TypeScript, and Supabase.
+A beautiful, minimalist journaling app focused on learning and reflection. Built with Next.js, TypeScript, OpenAI, and Tailwind CSS.
 
 ![Line-by-Line Screenshot](https://via.placeholder.com/800x400/1A2630/FFFFFF?text=Line-by-Line+Journaling+App)
 
 ## ✨ Features
 
-- **Daily Reflections**: Answer three thoughtful questions each day
-- **Streak Tracking**: Build momentum with visual streak tracking
-- **Beautiful UI**: Clean, distraction-free interface
-- **Cloud Sync**: Your entries are safely stored in the cloud
-- **LLM Ready**: Flexible question system for future AI integration
-- **Mobile Friendly**: Works great on all devices
+- **Learning-Focused Reflection**: Start with the simple question "What stood out to you today?"
+- **AI-Powered Follow-ups**: GPT-powered conversation to explore your thoughts deeper
+- **Writing Prompt Generation**: Get 1-3 writing prompts for blog posts, social media, or internal sharing
+- **Clean, Full-Screen Interface**: Minimal UI inspired by iA Writer
+- **Save & Archive**: Keep track of your favorite writing ideas
+- **Mobile Friendly**: Works beautifully on all devices
 
 ## 🚀 Quick Start
 
@@ -22,55 +22,37 @@ cd line-by-line
 yarn install
 ```
 
-### 2. Set Up Supabase
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Get your project URL and anon key from Settings > API
-3. Create a `.env.local` file:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-SUPABASE_ACCESS_TOKEN=your_supabase_access_token
-```
-
-**Note:**
-- The service role key is required for automated database setup.
-- The Supabase access token is required for automated migrations. You can generate one at [Supabase Account Tokens](https://app.supabase.com/account/tokens). Add it to your `.env.local` or export it in your shell:
-  ```bash
-  export SUPABASE_ACCESS_TOKEN=your_token_here
-  ```
-
-### 3. Set Up Database (Automated!)
+### 2. Set Up Environment Variables
+1. Get an OpenAI API key from [platform.openai.com](https://platform.openai.com)
+2. Copy the environment template:
 ```bash
-yarn setup
+cp .env.example .env.local
+```
+3. Add your OpenAI API key to `.env.local`:
+```env
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-This will automatically:
-- Link your project to the Supabase CLI
-- Run all migrations
-- Set up all tables, functions, and security policies
-
-**Alternative Manual Setup**: If you prefer not to use the service role key, you can manually run the SQL migration:
-1. Go to your Supabase dashboard > SQL Editor
-2. Copy the contents of `supabase/migrations/001_initial_schema.sql`
-3. Paste and run it
-
-### 4. Start Journaling!
+### 3. Start Reflecting!
 ```bash
 yarn dev
 ```
 
-Visit `http://localhost:3000` and start your daily reflection practice! 🎉
+Visit `http://localhost:3000` and start your reflection journey! 🎉
+
+## 📝 How It Works
+
+1. **Reflect**: Answer the simple question "What stood out to you today?" in a clean, full-screen interface
+2. **Explore**: Engage in a brief AI-powered conversation (2-3 exchanges) to dig deeper into your thoughts
+3. **Create**: Receive 1-3 personalized writing prompts for blog posts, social media, or internal sharing
+4. **Save**: Keep your favorite prompts for later use
 
 ## 🛠️ Development
 
 ### Available Scripts
 
-- `yarn setup` - Complete automated setup
 - `yarn dev` - Start development server
 - `yarn build` - Build for production
-- `yarn db:setup` - Set up database only
-- `yarn db:verify` - Check database configuration
 - `yarn lint` - Run ESLint
 
 ### Project Structure
@@ -79,23 +61,24 @@ Visit `http://localhost:3000` and start your daily reflection practice! 🎉
 line-by-line/
 ├── src/
 │   ├── components/     # React components
-│   ├── lib/           # Utilities and Supabase client
-│   ├── pages/         # Next.js pages
-│   └── types/         # TypeScript types
-├── supabase/
-│   └── migrations/    # Database migrations
-├── scripts/           # Setup and utility scripts
+│   │   ├── ui/        # Reusable UI components
+│   │   ├── WritingInterface.tsx
+│   │   ├── ChatInterface.tsx
+│   │   ├── PromptsDisplay.tsx
+│   │   └── JournalingApp.tsx
+│   ├── lib/           # Utilities and OpenAI client
+│   ├── pages/         # Next.js pages and API routes
+│   └── styles/        # Global styles
 └── public/            # Static assets
 ```
 
-## 🗄️ Database Schema
+## 🧠 Technology Stack
 
-The app uses a flexible schema designed for future LLM integration:
-
-- **`entries`** - Daily journal entries with content
-- **`user_settings`** - User preferences and streak days
-- **`question_templates`** - Customizable question sets
-- **`streak_analytics`** - Pre-calculated streak data
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **AI**: OpenAI GPT-4o-mini for conversations and prompt generation
+- **UI Components**: Custom components with Radix UI primitives
+- **Styling**: Tailwind CSS with custom animations
+- **Storage**: localStorage (Supabase integration ready for future)
 
 ## 🤝 Contributing
 
