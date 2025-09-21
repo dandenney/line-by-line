@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { WritingPrompt } from '@/lib/openai'
+import { dbOperations } from '@/lib/supabase'
 import { ArrowLeft, Book, Trash2 } from 'lucide-react'
 
 interface SavedPromptsViewProps {
@@ -10,16 +11,29 @@ export default function SavedPromptsView({ onBack }: SavedPromptsViewProps) {
   const [savedPrompts, setSavedPrompts] = useState<WritingPrompt[]>([])
 
   useEffect(() => {
-    const prompts = JSON.parse(localStorage.getItem('savedPrompts') || '[]')
-    setSavedPrompts(prompts.sort((a: WritingPrompt, b: WritingPrompt) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ))
+    loadSavedPrompts()
   }, [])
 
-  const removePrompt = (promptId: string) => {
-    const updatedPrompts = savedPrompts.filter(p => p.id !== promptId)
-    setSavedPrompts(updatedPrompts)
-    localStorage.setItem('savedPrompts', JSON.stringify(updatedPrompts))
+  const loadSavedPrompts = async () => {
+    try {
+      const prompts = await dbOperations.getSavedPrompts()
+      setSavedPrompts(prompts)
+    } catch (error) {
+      console.error('Error loading saved prompts:', error)
+    }
+  }
+
+  const removePrompt = async (promptId: string) => {
+    try {
+      // Update the prompt to set saved = false
+      await dbOperations.updatePrompt(promptId, { saved: false })
+
+      // Update local state
+      const updatedPrompts = savedPrompts.filter(p => p.id !== promptId)
+      setSavedPrompts(updatedPrompts)
+    } catch (error) {
+      console.error('Error removing prompt:', error)
+    }
   }
 
   const getTypeColor = (type: string) => {
@@ -100,7 +114,7 @@ export default function SavedPromptsView({ onBack }: SavedPromptsViewProps) {
                   </span>
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-500">
-                      {formatDate(prompt.createdAt)}
+                      {formatDate(prompt.created_at)}
                     </span>
                     <button
                       onClick={() => removePrompt(prompt.id)}

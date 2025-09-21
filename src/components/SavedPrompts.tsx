@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { WritingPrompt } from '@/lib/openai'
+import { dbOperations } from '@/lib/supabase'
 import { Book, ArrowLeft } from 'lucide-react'
 
 interface SavedPromptsProps {
@@ -10,9 +11,17 @@ export default function SavedPrompts({ onBack }: SavedPromptsProps) {
   const [savedPrompts, setSavedPrompts] = useState<WritingPrompt[]>([])
 
   useEffect(() => {
-    const prompts = JSON.parse(localStorage.getItem('savedPrompts') || '[]')
-    setSavedPrompts(prompts)
+    loadSavedPrompts()
   }, [])
+
+  const loadSavedPrompts = async () => {
+    try {
+      const prompts = await dbOperations.getSavedPrompts()
+      setSavedPrompts(prompts)
+    } catch (error) {
+      console.error('Error loading saved prompts:', error)
+    }
+  }
 
   const getTypeColor = (type: string) => {
     switch (type) {
@@ -76,7 +85,7 @@ export default function SavedPrompts({ onBack }: SavedPromptsProps) {
                     {getTypeLabel(prompt.type)}
                   </span>
                   <span className="text-xs text-gray-400">
-                    {new Date(prompt.createdAt).toLocaleDateString()}
+                    {new Date(prompt.created_at).toLocaleDateString()}
                   </span>
                 </div>
 
