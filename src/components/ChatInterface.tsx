@@ -15,7 +15,7 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
   const [conversationCount, setConversationCount] = useState(0)
   const [showChoice, setShowChoice] = useState(false)
   const [responseId, setResponseId] = useState<string | undefined>(undefined)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const maxConversations = 3
@@ -118,84 +118,94 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
     onComplete(messages, responseId)
   }
 
+  const assistantMessages = messages.filter(m => m.role === 'assistant')
+  const latestQuestion = assistantMessages[assistantMessages.length - 1]?.content
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full">
-        <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] p-4 rounded-2xl ${
-                  message.role === 'user'
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-white text-gray-900 shadow-sm border border-gray-100'
-                }`}
-              >
-                <p className="text-sm leading-relaxed">{message.content}</p>
-              </div>
+    <div className="min-h-screen bg-white flex flex-col">
+      <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full p-8">
+        <div className="mb-8">
+          <details className="mb-8 group">
+            <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-700 transition-colors list-none flex items-center">
+              <span className="mr-2 group-open:rotate-90 transition-transform inline-block">▸</span>
+              View your reflection
+            </summary>
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+              <p className="text-gray-700 leading-relaxed font-serif" style={{ fontFamily: 'Georgia, serif' }}>
+                {messages[0]?.content}
+              </p>
             </div>
-          ))}
+          </details>
+
+          {latestQuestion && !isLoading && (
+            <div className="mb-8">
+              <p className="text-xl text-gray-800 font-normal leading-relaxed">
+                {latestQuestion}
+              </p>
+            </div>
+          )}
 
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                </div>
+            <div className="mb-8">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} />
         </div>
 
-        <div className="p-6 bg-white border-t border-gray-200">
+        <div className="flex-1 flex flex-col">
           {showChoice ? (
-            <div className="text-center space-y-4">
-              <p className="text-gray-700 mb-6">
+            <div className="text-center space-y-6 py-12">
+              <p className="text-gray-700 text-lg">
                 Would you like to continue discussing this or get writing prompts now?
               </p>
               <div className="flex space-x-4 justify-center">
                 <button
                   onClick={handleContinueConversation}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Continue Discussion
                 </button>
                 <button
                   onClick={handleGetPrompts}
-                  className="px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+                  className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Get Writing Prompts
                 </button>
               </div>
             </div>
           ) : (
-            <div className="flex space-x-3">
-              <input
+            <>
+              <textarea
                 ref={inputRef}
-                type="text"
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your response..."
+                placeholder="Continue writing..."
                 disabled={isLoading || conversationCount >= maxConversations}
-                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:opacity-50"
+                className="w-full flex-1 resize-none border-none outline-none text-lg leading-relaxed text-gray-900 bg-transparent font-serif placeholder-gray-400 disabled:opacity-50"
+                style={{ fontFamily: 'Georgia, serif' }}
               />
-              <button
-                onClick={handleUserResponse}
-                disabled={!currentInput.trim() || isLoading || conversationCount >= maxConversations}
-                className="px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Send
-              </button>
-            </div>
+
+              <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-100">
+                <div className="text-sm text-gray-500">
+                  {currentInput.length > 0 && `${currentInput.split(' ').filter(word => word.length > 0).length} words`}
+                </div>
+                <button
+                  onClick={handleUserResponse}
+                  disabled={!currentInput.trim() || isLoading || conversationCount >= maxConversations}
+                  className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  Continue
+                </button>
+              </div>
+            </>
           )}
         </div>
+        <div ref={messagesEndRef} />
       </div>
     </div>
   )
