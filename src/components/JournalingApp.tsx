@@ -17,6 +17,7 @@ export default function JournalingApp() {
   const [currentState, setCurrentState] = useState<AppState>('dashboard')
   const [initialReflection, setInitialReflection] = useState('')
   const [conversationMessages, setConversationMessages] = useState<ChatMessage[]>([])
+  const [conversationResponseId, setConversationResponseId] = useState<string | undefined>(undefined)
   const [selectedEntry, setSelectedEntry] = useState<ReflectionEntry | null>(null)
 
   // Check if this is the user's first time - if no reflections exist, go to writing
@@ -48,8 +49,9 @@ export default function JournalingApp() {
     setCurrentState('chat')
   }
 
-  const handleChatComplete = (messages: ChatMessage[]) => {
+  const handleChatComplete = (messages: ChatMessage[], responseId?: string) => {
     setConversationMessages(messages)
+    setConversationResponseId(responseId)
     setCurrentState('prompts')
   }
 
@@ -57,6 +59,7 @@ export default function JournalingApp() {
     setCurrentState('dashboard')
     setInitialReflection('')
     setConversationMessages([])
+    setConversationResponseId(undefined)
   }
 
   const handleViewConversation = (entry: ReflectionEntry) => {
@@ -132,6 +135,7 @@ export default function JournalingApp() {
         <div className="animate-in fade-in duration-500">
           <PromptsDisplay
             messages={conversationMessages}
+            responseId={conversationResponseId}
             onComplete={handleReflectionComplete}
           />
         </div>

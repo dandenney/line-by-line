@@ -3,7 +3,7 @@ import { ChatMessage } from '@/lib/openai'
 
 interface ChatInterfaceProps {
   initialReflection: string
-  onComplete: (messages: ChatMessage[]) => void
+  onComplete: (messages: ChatMessage[], responseId?: string) => void
 }
 
 export default function ChatInterface({ initialReflection, onComplete }: ChatInterfaceProps) {
@@ -14,6 +14,7 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
   const [isLoading, setIsLoading] = useState(false)
   const [conversationCount, setConversationCount] = useState(0)
   const [showChoice, setShowChoice] = useState(false)
+  const [responseId, setResponseId] = useState<string | undefined>(undefined)
   const inputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -43,13 +44,15 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: messages,
-          type: 'followup'
+          type: 'followup',
+          previousResponseId: responseId
         })
       })
 
       const data = await response.json()
       if (data.message) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.message } as ChatMessage])
+        setResponseId(data.responseId)
       }
     } catch (error) {
       console.error('Error generating follow-up:', error)
@@ -78,7 +81,8 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: newMessages,
-          type: 'followup'
+          type: 'followup',
+          previousResponseId: responseId
         })
       })
 
@@ -86,6 +90,7 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
       if (data.message) {
         const finalMessages: ChatMessage[] = [...newMessages, { role: 'assistant', content: data.message }]
         setMessages(finalMessages)
+        setResponseId(data.responseId)
 
         if (conversationCount + 1 >= maxConversations - 1) {
           setTimeout(() => setShowChoice(true), 1000)
@@ -110,7 +115,7 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
   }
 
   const handleGetPrompts = () => {
-    onComplete(messages)
+    onComplete(messages, responseId)
   }
 
   return (

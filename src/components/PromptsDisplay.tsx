@@ -5,10 +5,11 @@ import { Check, Archive, ArrowRight } from 'lucide-react'
 
 interface PromptsDisplayProps {
   messages: ChatMessage[]
+  responseId?: string
   onComplete: () => void
 }
 
-export default function PromptsDisplay({ messages, onComplete }: PromptsDisplayProps) {
+export default function PromptsDisplay({ messages, responseId, onComplete }: PromptsDisplayProps) {
   const [prompts, setPrompts] = useState<WritingPrompt[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [reflectionSaved, setReflectionSaved] = useState(false)
@@ -53,7 +54,8 @@ export default function PromptsDisplay({ messages, onComplete }: PromptsDisplayP
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: messages,
-          type: 'prompts'
+          type: 'prompts',
+          previousResponseId: responseId
         })
       })
 
