@@ -1,23 +1,20 @@
 import { useState, useEffect } from 'react'
 import WritingInterface from './WritingInterface'
 import ChatInterface from './ChatInterface'
-import PromptsDisplay from './PromptsDisplay'
 import Dashboard from './Dashboard'
 import ConversationView from './ConversationView'
 import AuthForm from './AuthForm'
-import { ChatMessage, ReflectionEntry } from '@/lib/openai'
+import { ReflectionEntry } from '@/lib/openai'
 import { dbOperations } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { LogOut } from 'lucide-react'
 
-type AppState = 'dashboard' | 'writing' | 'chat' | 'prompts' | 'conversation'
+type AppState = 'dashboard' | 'writing' | 'chat' | 'conversation'
 
 export default function JournalingApp() {
   const { user, loading, signOut } = useAuth()
   const [currentState, setCurrentState] = useState<AppState>('dashboard')
   const [initialReflection, setInitialReflection] = useState('')
-  const [conversationMessages, setConversationMessages] = useState<ChatMessage[]>([])
-  const [conversationResponseId, setConversationResponseId] = useState<string | undefined>(undefined)
   const [selectedEntry, setSelectedEntry] = useState<ReflectionEntry | null>(null)
 
   // Check if this is the user's first time - if no reflections exist, go to writing
@@ -41,7 +38,6 @@ export default function JournalingApp() {
   const handleStartNewReflection = () => {
     setCurrentState('writing')
     setInitialReflection('')
-    setConversationMessages([])
   }
 
   const handleWritingSubmit = (content: string) => {
@@ -49,17 +45,9 @@ export default function JournalingApp() {
     setCurrentState('chat')
   }
 
-  const handleChatComplete = (messages: ChatMessage[], responseId?: string) => {
-    setConversationMessages(messages)
-    setConversationResponseId(responseId)
-    setCurrentState('prompts')
-  }
-
-  const handleReflectionComplete = () => {
+  const handleChatComplete = () => {
     setCurrentState('dashboard')
     setInitialReflection('')
-    setConversationMessages([])
-    setConversationResponseId(undefined)
   }
 
   const handleViewConversation = (entry: ReflectionEntry) => {
@@ -127,16 +115,6 @@ export default function JournalingApp() {
           <ChatInterface
             initialReflection={initialReflection}
             onComplete={handleChatComplete}
-          />
-        </div>
-      )}
-
-      {currentState === 'prompts' && (
-        <div className="animate-in fade-in duration-500">
-          <PromptsDisplay
-            messages={conversationMessages}
-            responseId={conversationResponseId}
-            onComplete={handleReflectionComplete}
           />
         </div>
       )}
