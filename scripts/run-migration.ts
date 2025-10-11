@@ -18,11 +18,11 @@ if (!connectionString) {
 async function runMigration() {
   console.log('🚀 Running database migration...')
 
-  // Set NODE_TLS_REJECT_UNAUTHORIZED for this process
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
-
   const client = new Client({
-    connectionString
+    connectionString,
+    ssl: {
+      rejectUnauthorized: false
+    }
   })
 
   try {

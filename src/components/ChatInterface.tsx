@@ -25,6 +25,9 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // Generate a unique sessionId for this journaling session (for Langfuse tracking)
+  const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substring(7)}`)
+
   const maxConversations = 3
 
   useEffect(() => {
@@ -52,7 +55,8 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
         body: JSON.stringify({
           messages: messages,
           type: 'followup',
-          previousResponseId: responseId
+          previousResponseId: responseId,
+          sessionId
         })
       })
 
@@ -89,7 +93,8 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
         body: JSON.stringify({
           messages: newMessages,
           type: 'followup',
-          previousResponseId: responseId
+          previousResponseId: responseId,
+          sessionId
         })
       })
 
@@ -132,7 +137,8 @@ export default function ChatInterface({ initialReflection, onComplete }: ChatInt
         body: JSON.stringify({
           messages: messages,
           type: 'prompts',
-          previousResponseId: responseId
+          previousResponseId: responseId,
+          sessionId
         })
       })
 
